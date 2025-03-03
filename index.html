@@ -3,42 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>European Portuguese Learning App</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Portuguese A2 Learning Platform</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/quiz.css">
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore.js"></script>
 </head>
 <body>
-    <div id="app">
-        <header>
-            <h1>Learn European Portuguese</h1>
-            <div class="level-selector">
-                <button class="level-btn active" data-level="beginner">Beginner</button>
-                <button class="level-btn" data-level="intermediate">Intermediate</button>
-                <button class="level-btn" data-level="advanced">Advanced</button>
+    <nav class="nav-bar">
+        <div class="logo">PT-A2 Learn</div>
+        <div class="user-section">
+            <button id="login-btn" class="auth-btn">Login</button>
+            <button id="signup-btn" class="auth-btn">Sign Up</button>
+            <div id="user-profile" class="hidden">
+                <span id="user-name"></span>
+                <button id="logout-btn">Logout</button>
             </div>
-        </header>
-        
-        <main class="content">
-            <div class="lesson-card">
-                <h2 class="portuguese-text"></h2>
-                <p class="translation hidden"></p>
-                <p class="usage-context"></p>
-                <div class="audio-player"></div>
-                <div class="extra-content"></div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="dashboard hidden">
+            <h2>Your Progress</h2>
+            <div class="progress-stats">
+                <div class="stat-card">
+                    <h3>Vocabulary</h3>
+                    <div class="progress-bar">
+                        <div class="progress" id="vocab-progress"></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>Grammar</h3>
+                    <div class="progress-bar">
+                        <div class="progress" id="grammar-progress"></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>Listening</h3>
+                    <div class="progress-bar">
+                        <div class="progress" id="listening-progress"></div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="controls">
-                <button id="toggle-translation">Show Translation</button>
-                <button id="next-lesson">Next Lesson</button>
-            </div>
-        </main>
-        
-        <footer>
-            <div class="progress-bar">
-                <div class="progress"></div>
-            </div>
-            <p class="score">Score: <span id="score">0</span></p>
-        </footer>
-    </div>
-    <script src="script.js"></script>
+        </div>
+
+        <div class="learning-sections">
+            <section id="vocabulary" class="section">
+                <h2>Vocabulary Training</h2>
+                <div class="vocab-container">
+                    <!-- Dynamic content -->
+                </div>
+            </section>
+
+            <section id="pronunciation" class="section">
+                <h2>Pronunciation Practice</h2>
+                <div class="pronunciation-container">
+                    <div class="word-display"></div>
+                    <button class="play-audio">Play</button>
+                    <button class="record-pronunciation">Record</button>
+                    <div class="feedback-display"></div>
+                </div>
+            </section>
+
+            <section id="quiz" class="section">
+                <h2>A2 Test Preparation</h2>
+                <div class="quiz-container">
+                    <!-- Dynamic quiz content -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="data/vocabulary.js"></script>
+    <script src="data/exercises.js"></script>
+    <script src="data/a2-test-prep.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/pronunciation.js"></script>
+    <script src="js/quiz.js"></script>
+    <script src="js/script.js"></script>
 </body>
 </html>
