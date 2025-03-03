@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>European Portuguese Learning App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Learn European Portuguese</h1>
+            <div class="level-selector">
+                <button class="level-btn active" data-level="beginner">Beginner</button>
+                <button class="level-btn" data-level="intermediate">Intermediate</button>
+                <button class="level-btn" data-level="advanced">Advanced</button>
+            </div>
+        </header>
+        
+        <main class="content">
+            <div class="lesson-card">
+                <h2 class="portuguese-text"></h2>
+                <p class="translation hidden"></p>
+                <p class="usage-context"></p>
+                <div class="audio-player"></div>
+                <div class="extra-content"></div>
+            </div>
+            
+            <div class="controls">
+                <button id="toggle-translation">Show Translation</button>
+                <button id="next-lesson">Next Lesson</button>
+            </div>
+        </main>
+        
+        <footer>
+            <div class="progress-bar">
+                <div class="progress"></div>
+            </div>
+            <p class="score">Score: <span id="score">0</span></p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
