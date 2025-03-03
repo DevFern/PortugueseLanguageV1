@@ -1,0 +1,174 @@
+:root {
+    --primary-color: #4f46e5;
+    --secondary-color: #16a34a;
+    --background-color: #f8fafc;
+    --card-color: #ffffff;
+    --text-color: #1e293b;
+    --light-gray: #f1f5f9;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(to bottom, #eef2ff, #f5f3ff);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+#app {
+    max-width: 800px;
+    width: 100%;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    font-size: 2rem;
+}
+
+.level-selector {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.level-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: none;
+    background-color: var(--light-gray);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.level-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.content {
+    background-color: var(--card-color);
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.lesson-card {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.portuguese-text {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.translation {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.usage-context {
+    color: #64748b;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.hidden {
+    display: none;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+#toggle-translation {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+#toggle-translation:hover {
+    background-color: #4338ca;
+}
+
+#next-lesson {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+#next-lesson:hover {
+    background-color: #15803d;
+}
+
+.extra-content {
+    background-color: var(--light-gray);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.vocabulary-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.vocabulary-item {
+    background-color: #e0e7ff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.9rem;
+}
+
+.progress-bar {
+    height: 0.5rem;
+    background-color: var(--light-gray);
+    border-radius: 1rem;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress {
+    height: 100%;
+    background-color: var(--primary-color);
+    width: 0%;
+}
+
+footer {
+    text-align: center;
+}
+
+.score {
+    color: var(--text-color);
+    font-weight: 500;
+}
