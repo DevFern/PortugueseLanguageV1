@@ -3,360 +3,336 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Learn European Portuguese for A2 citizenship exam with flashcards, quizzes, and pronunciation guides">
-    <meta name="keywords" content="Portuguese, European Portuguese, A2 exam, citizenship, language learning">
-    
-    <!-- Open Graph / Social Media -->
-    <meta property="og:title" content="European Portuguese A2 Learning">
-    <meta property="og:description" content="Interactive platform for learning European Portuguese">
-    <meta property="og:image" content="assets/images/og-image.jpg">
-    <meta property="og:url" content="https://devfern.github.io/PortugueseLanguageV1">
-    
-    <title>European Portuguese A2 Learning</title>
-    
-    <!-- Favicon -->
+    <meta name="description" content="Learn European Portuguese with interactive flashcards, quizzes, and pronunciation guides. Perfect for A2 citizenship exam preparation.">
+    <title>Portuguese A2 Learning Platform</title>
     <link rel="icon" href="assets/images/favicon.ico">
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <!-- CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/main.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <div class="app-container">
-        <header>
+    <nav class="nav-bar">
+        <div class="container nav-container">
             <div class="logo">
-                <i class="fas fa-language"></i>
-                <h1>Portuguese A2</h1>
+                <img src="assets/images/logo.png" alt="PT-A2 Learn Logo" height="40">
+                <span>PT-A2 Learn</span>
             </div>
-            <nav>
-                <ul>
-                    <li><a href="#flashcards" class="active"><i class="fas fa-clone"></i> Flashcards</a></li>
-                    <li><a href="#quiz"><i class="fas fa-question-circle"></i> Quiz</a></li>
-                    <li><a href="#pronunciation"><i class="fas fa-volume-up"></i> Pronunciation</a></li>
-                    <li><a href="#progress"><i class="fas fa-chart-line"></i> Progress</a></li>
-                </ul>
-            </nav>
-            <div class="user-menu">
-                <button id="theme-toggle"><i class="fas fa-moon"></i></button>
-                <div class="profile-dropdown">
-                    <button id="login-btn" class="login-btn">Login</button>
-                    <!-- User profile will appear here after login -->
+            <div class="nav-links">
+                <a href="index.html" class="nav-link active">Home</a>
+                <a href="#flashcards" class="nav-link" data-section="flashcards">Flashcards</a>
+                <a href="#pronunciation" class="nav-link" data-section="pronunciation">Pronunciation</a>
+                <a href="#quiz" class="nav-link" data-section="quiz">Quiz</a>
+                <a href="#about" class="nav-link" data-section="about">About</a>
+            </div>
+            <div class="user-section">
+                <button id="theme-toggle" aria-label="Toggle dark mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="login-btn" class="auth-btn">Login</button>
+                <button id="signup-btn" class="auth-btn">Sign Up</button>
+                <div id="user-profile" class="hidden">
+                    <span id="user-name"></span>
+                    <button id="logout-btn">Logout</button>
                 </div>
             </div>
-        </header>
-        
-        <main>
-            <!-- Welcome Section -->
-            <section id="welcome" class="section active">
-                <div class="welcome-card">
-                    <h2>Welcome to Portuguese A2 Learning</h2>
-                    <p>Prepare for your citizenship exam with interactive lessons, quizzes, and pronunciation practice.</p>
-                    <div class="level-selector">
-                        <button class="level-btn active" data-level="beginner">Beginner</button>
-                        <button class="level-btn" data-level="intermediate">Intermediate</button>
-                        <button class="level-btn" data-level="advanced">Advanced</button>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section id="hero" class="hero-section">
+            <div class="hero-content">
+                <h1>Master European Portuguese</h1>
+                <p>Interactive learning for A2 citizenship exam preparation</p>
+                <div class="hero-buttons">
+                    <button id="get-started-btn" class="primary-btn">Get Started</button>
+                    <button id="learn-more-btn" class="secondary-btn">Learn More</button>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="assets/images/hero-image.png" alt="Learning Portuguese">
+            </div>
+        </section>
+
+        <section id="features" class="features-section">
+            <h2>Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-book"></i>
+                    <h3>Vocabulary Flashcards</h3>
+                    <p>Learn essential Portuguese words and phrases with interactive flashcards.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-microphone"></i>
+                    <h3>Pronunciation Practice</h3>
+                    <p>Perfect your accent with audio examples and recording capabilities.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-tasks"></i>
+                    <h3>A2 Test Preparation</h3>
+                    <p>Practice with quizzes designed to prepare you for the A2 citizenship exam.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Progress Tracking</h3>
+                    <p>Monitor your learning journey with detailed progress statistics.</p>
+                </div>
+            </div>
+        </section>
+
+        <div id="dashboard" class="dashboard hidden">
+            <h2>Your Progress</h2>
+            <div class="progress-stats">
+                <div class="stat-card">
+                    <h3>Vocabulary</h3>
+                    <div class="progress-bar">
+                        <div class="progress" id="vocab-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
-                    <div class="get-started">
-                        <button id="start-learning" class="primary-btn">
-                            <i class="fas fa-play"></i> Start Learning
-                        </button>
+                    <p class="progress-text"><span id="vocab-percentage">0</span>% complete</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Grammar</h3>
+                    <div class="progress-bar">
+                        <div class="progress" id="grammar-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <p class="progress-text"><span id="grammar-percentage">0</span>% complete</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Listening</h3>
+                    <div class="progress-bar">
+                        <div class="progress" id="listening-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <p class="progress-text"><span id="listening-percentage">0</span>% complete</p>
+                </div>
+            </div>
+            <div class="user-stats">
+                <div class="stat-item">
+                    <i class="fas fa-fire"></i>
+                    <div class="stat-details">
+                        <span class="stat-value" id="streak-count">0</span>
+                        <span class="stat-label">Day Streak</span>
                     </div>
                 </div>
-                
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <i class="fas fa-clone"></i>
-                        <h3>Flashcards</h3>
-                        <p>Practice vocabulary with interactive flashcards</p>
-                    </div>
-                    <div class="feature-card">
-                        <i class="fas fa-question-circle"></i>
-                        <h3>Quizzes</h3>
-                        <p>Test your knowledge with scoring</p>
-                    </div>
-                    <div class="feature-card">
-                        <i class="fas fa-volume-up"></i>
-                        <h3>Pronunciation</h3>
-                        <p>Listen to native pronunciation</p>
-                    </div>
-                    <div class="feature-card">
-                        <i class="fas fa-chart-line"></i>
-                        <h3>Progress Tracking</h3>
-                        <p>Monitor your learning journey</p>
+                <div class="stat-item">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="stat-details">
+                        <span class="stat-value" id="lessons-completed">0</span>
+                        <span class="stat-label">Lessons Completed</span>
                     </div>
                 </div>
-            </section>
-            
-            <!-- Flashcards Section -->
+                <div class="stat-item">
+                    <i class="fas fa-trophy"></i>
+                    <div class="stat-details">
+                        <span class="stat-value" id="quiz-average">0%</span>
+                        <span class="stat-label">Quiz Average</span>
+                    </div>
+                </div>
+            </div>
+            <h3>Recent Activity</h3>
+            <div class="activity-list">
+                <!-- Activity items will be added dynamically -->
+                <div class="empty-activity">
+                    <p>No recent activity. Start learning to see your progress!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="learning-sections">
             <section id="flashcards" class="section">
-                <div class="section-header">
-                    <h2>Vocabulary Flashcards</h2>
-                    <div class="category-selector">
-                        <button class="category-btn active" data-category="citizenship">Citizenship</button>
-                        <button class="category-btn" data-category="daily-life">Daily Life</button>
-                        <button class="category-btn" data-category="grammar">Grammar</button>
-                    </div>
+                <h2>Vocabulary Flashcards</h2>
+                <div class="level-selector">
+                    <button class="level-btn active" data-level="beginner">Beginner</button>
+                    <button class="level-btn" data-level="intermediate">Intermediate</button>
+                    <button class="level-btn" data-level="advanced">Advanced</button>
                 </div>
-                
+                <div class="category-selector">
+                    <button class="category-btn active" data-category="citizenship">Citizenship</button>
+                    <button class="category-btn" data-category="daily_life">Daily Life</button>
+                    <button class="category-btn" data-category="transportation">Transportation</button>
+                    <button class="category-btn" data-category="food">Food & Dining</button>
+                </div>
                 <div class="flashcard-container">
                     <div class="flashcard">
                         <div class="flashcard-inner">
                             <div class="flashcard-front">
-                                <p class="word">cidadania</p>
-                                <button class="audio-btn"><i class="fas fa-volume-up"></i></button>
+                                <h3 class="word">cidadania</h3>
+                                <p class="phonetic">[si-da-da-ni-a]</p>
                             </div>
                             <div class="flashcard-back">
-                                <p class="translation">citizenship</p>
+                                <h3 class="translation">citizenship</h3>
                                 <p class="usage">Preciso de obter a cidadania portuguesa.</p>
-                                <p class="usage-translation">I need to obtain Portuguese citizenship.</p>
+                                <p class="english-usage">I need to obtain Portuguese citizenship.</p>
                             </div>
                         </div>
                     </div>
-                    
                     <div class="flashcard-controls">
-                        <button id="prev-card" class="control-btn"><i class="fas fa-arrow-left"></i></button>
-                        <button id="flip-card" class="control-btn"><i class="fas fa-sync-alt"></i> Flip</button>
-                        <button id="next-card" class="control-btn"><i class="fas fa-arrow-right"></i></button>
+                        <button id="prev-card" class="flashcard-btn"><i class="fas fa-arrow-left"></i> Previous</button>
+                        <button id="flip-card" class="flashcard-btn"><i class="fas fa-sync"></i> Flip</button>
+                        <button id="next-card" class="flashcard-btn">Next <i class="fas fa-arrow-right"></i></button>
                     </div>
-                    
-                    <div class="progress-indicator">
-                        <div class="progress-text">Card <span id="current-card">1</span> of <span id="total-cards">10</span></div>
-                        <div class="progress-bar">
-                            <div class="progress" style="width: 10%;"></div>
-                        </div>
+                    <div class="flashcard-progress">
+                        <span class="flashcard-progress-text">Card <span id="current-card">1</span> of <span id="total-cards">10</span></span>
                     </div>
                 </div>
             </section>
-            
-            <!-- Quiz Section -->
-            <section id="quiz" class="section">
-                <div class="section-header">
-                    <h2>Test Your Knowledge</h2>
-                    <div class="quiz-selector">
-                        <button class="quiz-type-btn active" data-quiz="vocabulary">Vocabulary</button>
-                        <button class="quiz-type-btn" data-quiz="listening">Listening</button>
-                        <button class="quiz-type-btn" data-quiz="grammar">Grammar</button>
-                    </div>
-                </div>
-                
-                <div class="quiz-container">
-                    <div class="quiz-question">
-                        <h3>What is the Portuguese word for "citizenship"?</h3>
-                        <div class="options">
-                            <button class="option-btn">cidadão</button>
-                            <button class="option-btn">cidadania</button>
-                            <button class="option-btn">cidade</button>
-                            <button class="option-btn">civil</button>
-                        </div>
-                    </div>
-                    
-                    <div class="quiz-controls">
-                        <div class="quiz-progress">
-                            <div class="progress-text">Question <span id="current-question">1</span> of <span id="total-questions">10</span></div>
-                            <div class="progress-bar">
-                                <div class="progress" style="width: 10%;"></div>
-                            </div>
-                        </div>
-                        <div class="score-display">
-                            Score: <span id="quiz-score">0</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Pronunciation Section -->
+
             <section id="pronunciation" class="section">
-                <div class="section-header">
-                    <h2>Pronunciation Practice</h2>
+                <h2>Pronunciation Practice</h2>
+                <div class="level-selector">
+                    <button class="level-btn active" data-level="beginner">Beginner</button>
+                    <button class="level-btn" data-level="advanced">Advanced</button>
                 </div>
-                
                 <div class="pronunciation-container">
                     <div class="word-display">
-                        <h3 class="pronunciation-word">cidadania</h3>
-                        <p class="pronunciation-phonetic">[si-da-da-ni-a]</p>
+                        <h3 class="word">cidadania</h3>
+                        <p class="translation">citizenship</p>
+                        <p class="phonetic">[si-da-da-ni-a]</p>
                     </div>
-                    
-                    <div class="audio-controls">
-                        <button id="play-slow" class="audio-control-btn">
-                            <i class="fas fa-volume-down"></i> Slow
-                        </button>
-                        <button id="play-normal" class="audio-control-btn">
-                            <i class="fas fa-volume-up"></i> Normal
-                        </button>
-                        <button id="record-pronunciation" class="audio-control-btn">
-                            <i class="fas fa-microphone"></i> Record
-                        </button>
+                    <div class="pronunciation-controls">
+                        <button class="play-audio"><i class="fas fa-volume-up"></i> Listen</button>
+                        <button class="record-pronunciation"><i class="fas fa-microphone"></i> Record</button>
                     </div>
-                    
-                    <div class="pronunciation-tips">
-                        <h4>Tips:</h4>
-                        <ul>
-                            <li>The "ci" is pronounced like "see" in English</li>
-                            <li>Stress the third syllable: ci-da-DA-ni-a</li>
-                            <li>The final "a" is pronounced like "uh"</li>
-                        </ul>
+                    <div class="feedback-display">
+                        <!-- Feedback will be displayed here -->
                     </div>
-                    
                     <div class="pronunciation-navigation">
                         <button id="prev-word" class="nav-btn"><i class="fas fa-arrow-left"></i> Previous</button>
                         <button id="next-word" class="nav-btn">Next <i class="fas fa-arrow-right"></i></button>
                     </div>
                 </div>
             </section>
-            
-            <!-- Progress Section -->
-            <section id="progress" class="section">
-                <div class="section-header">
-                    <h2>Your Learning Progress</h2>
+
+            <section id="quiz" class="section">
+                <h2>A2 Test Preparation</h2>
+                <div class="quiz-type-selector">
+                    <button class="quiz-type-btn active" data-quiz="vocabulary">Vocabulary</button>
+                    <button class="quiz-type-btn" data-quiz="listening">Listening</button>
+                    <button class="quiz-type-btn" data-quiz="grammar">Grammar</button>
+                    <button class="quiz-type-btn" data-quiz="citizenship">Citizenship</button>
                 </div>
-                
-                <div class="progress-container">
-                    <div class="progress-summary">
-                        <div class="progress-card">
-                            <h3>Vocabulary</h3>
-                            <div class="circular-progress">
-                                <svg>
-                                    <circle cx="60" cy="60" r="50"></circle>
-                                    <circle cx="60" cy="60" r="50" style="stroke-dashoffset: calc(315 - (315 * 45) / 100);"></circle>
-                                </svg>
-                                <div class="percentage">45%</div>
-                            </div>
-                            <p>45 of 100 words learned</p>
-                        </div>
-                        <div class="progress-card">
-                            <h3>Quizzes</h3>
-                            <div class="circular-progress">
-                                <svg>
-                                    <circle cx="60" cy="60" r="50"></circle>
-                                    <circle cx="60" cy="60" r="50" style="stroke-dashoffset: calc(315 - (315 * 30) / 100);"></circle>
-                                </svg>
-                                <div class="percentage">30%</div>
-                            </div>
-                            <p>3 of 10 quizzes completed</p>
-                        </div>
-                        <div class="progress-card">
-                            <h3>Pronunciation</h3>
-                            <div class="circular-progress">
-                                <svg>
-                                    <circle cx="60" cy="60" r="50"></circle>
-                                    <circle cx="60" cy="60" r="50" style="stroke-dashoffset: calc(315 - (315 * 20) / 100);"></circle>
-                                </svg>
-                                <div class="percentage">20%</div>
-                            </div>
-                            <p>20 of 100 words practiced</p>
-                        </div>
-                    </div>
-                    
-                    <div class="recent-activity">
-                        <h3>Recent Activity</h3>
-                        <ul class="activity-list">
-                            <li class="activity-item">
-                                <i class="fas fa-check-circle"></i>
-                                <div class="activity-details">
-                                    <p class="activity-title">Completed Citizenship Vocabulary Quiz</p>
-                                    <p class="activity-time">Today, 10:30 AM</p>
-                                </div>
-                                <div class="activity-score">8/10</div>
-                            </li>
-                            <li class="activity-item">
-                                <i class="fas fa-clone"></i>
-                                <div class="activity-details">
-                                    <p class="activity-title">Practiced Daily Life Flashcards</p>
-                                    <p class="activity-time">Yesterday, 3:45 PM</p>
-                                </div>
-                                <div class="activity-score">15 cards</div>
-                            </li>
-                            <li class="activity-item">
-                                <i class="fas fa-volume-up"></i>
-                                <div class="activity-details">
-                                    <p class="activity-title">Pronunciation Practice Session</p>
-                                    <p class="activity-time">Yesterday, 2:15 PM</p>
-                                </div>
-                                <div class="activity-score">10 words</div>
-                            </li>
-                        </ul>
-                    </div>
+                <div class="level-selector">
+                    <button class="level-btn active" data-level="beginner">Beginner</button>
+                    <button class="level-btn" data-level="advanced">Advanced</button>
+                </div>
+                <div class="quiz-container">
+                    <!-- Quiz content will be dynamically generated -->
                 </div>
             </section>
-        </main>
-        
-        <footer>
+
+            <section id="about" class="section">
+                <h2>About This App</h2>
+                <div class="about-content">
+                    <p>This European Portuguese Learning App is designed specifically for A2 level learners preparing for the Portuguese citizenship exam. It focuses on the vocabulary, grammar, and cultural knowledge needed to pass the A2 CIPLE exam.</p>
+                    
+                    <h3>Why Learn European Portuguese?</h3>
+                    <p>European Portuguese (spoken in Portugal) differs from Brazilian Portuguese in pronunciation, vocabulary, and some grammar aspects. This app focuses specifically on European Portuguese to help those living in or planning to move to Portugal.</p>
+                    
+                    <h3>A2 Citizenship Requirements</h3>
+                    <p>To obtain Portuguese citizenship, applicants typically need to demonstrate A2 level proficiency in Portuguese. This includes basic communication skills in everyday situations, understanding simple texts, and knowledge about Portuguese culture and society.</p>
+                    
+                    <h3>How to Use This App</h3>
+                    <ul>
+                        <li><strong>Flashcards:</strong> Learn vocabulary through interactive flashcards</li>
+                        <li><strong>Pronunciation:</strong> Practice your pronunciation with audio examples</li>
+                        <li><strong>Quizzes:</strong> Test your knowledge with various quiz types</li>
+                        <li><strong>Progress Tracking:</strong> Monitor your learning journey</li>
+                    </ul>
+                    
+                    <h3>Contact</h3>
+                    <p>For feedback or questions about this app, please contact us at <a href="mailto:contact@pt-a2-learn.com">contact@pt-a2-learn.com</a>.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
             <div class="footer-content">
-                <p>&copy; 2023 Portuguese A2 Learning | <a href="#">Privacy Policy</a> | <a href="#">Terms of Use</a></p>
-                <div class="social-links">
-                    <a href="#"><i class="fab fa-github"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                <div class="footer-logo">
+                    <img src="assets/images/logo.png" alt="PT-A2 Learn Logo" height="30">
+                    <span>PT-A2 Learn</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">Privacy Policy</a>
+                    <a href="#" class="footer-link">Terms of Service</a>
+                    <a href="#" class="footer-link">Contact</a>
                 </div>
             </div>
-        </footer>
-    </div>
-    
+            <div class="footer-bottom">
+                <p>&copy; 2025 PT-A2 Learn. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
     <!-- Login Modal -->
     <div id="login-modal" class="modal">
         <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2>Login to Your Account</h2>
-            <form id="login-form">
+            <button class="close-modal">&times;</button>
+            <h2>Login</h2>
+            <form id="login-form" class="modal-form">
                 <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" required>
+                    <label for="login-email" class="form-label">Email</label>
+                    <input type="email" id="login-email" class="form-input" required>
                 </div>
                 <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" required>
+                    <label for="login-password" class="form-label">Password</label>
+                    <input type="password" id="login-password" class="form-input" required>
                 </div>
-                <button type="submit" class="primary-btn">Login</button>
+                <button type="submit" class="form-submit">Login</button>
             </form>
-            <p class="modal-footer">Don't have an account? <a href="#" id="show-signup">Sign up</a></p>
+            <div class="form-footer">
+                <p>Don't have an account? <a href="#" id="show-signup">Sign up</a></p>
+            </div>
         </div>
     </div>
-    
+
     <!-- Signup Modal -->
     <div id="signup-modal" class="modal">
         <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2>Create an Account</h2>
-            <form id="signup-form">
+            <button class="close-modal">&times;</button>
+            <h2>Sign Up</h2>
+            <form id="signup-form" class="modal-form">
                 <div class="form-group">
-                    <label for="signup-name">Name</label>
-                    <input type="text" id="signup-name" required>
+                    <label for="signup-name" class="form-label">Name</label>
+                    <input type="text" id="signup-name" class="form-input" required>
                 </div>
                 <div class="form-group">
-                    <label for="signup-email">Email</label>
-                    <input type="email" id="signup-email" required>
+                    <label for="signup-email" class="form-label">Email</label>
+                    <input type="email" id="signup-email" class="form-input" required>
                 </div>
                 <div class="form-group">
-                    <label for="signup-password">Password</label>
-                    <input type="password" id="signup-password" required>
+                    <label for="signup-password" class="form-label">Password</label>
+                    <input type="password" id="signup-password" class="form-input" required>
                 </div>
-                <button type="submit" class="primary-btn">Sign Up</button>
+                <button type="submit" class="form-submit">Sign Up</button>
             </form>
-            <p class="modal-footer">Already have an account? <a href="#" id="show-login">Login</a></p>
+            <div class="form-footer">
+                <p>Already have an account? <a href="#" id="show-login">Login</a></p>
+            </div>
         </div>
     </div>
-    
-    <!-- JavaScript -->
-    <script src="data/vocabulary.js"></script>
-    <script src="data/a2-test-prep.js"></script>
-    <script src="assets/js/utils.js"></script>
-    <script src="assets/js/flashcards.js"></script>
-    <script src="assets/js/progress.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/pronunciation.js"></script>
-    <script src="js/quiz.js"></script>
-    <script src="js/script.js"></script>
-    
+
     <noscript>
         <div class="noscript-message">
-            <h2>JavaScript Required</h2>
-            <p>This application requires JavaScript to function. Please enable JavaScript in your browser settings and reload the page.</p>
+            This application requires JavaScript to function properly. Please enable JavaScript in your browser settings.
         </div>
     </noscript>
+
+    <!-- Load data first -->
+    <script src="data/vocabulary.js"></script>
+    <script src="data/a2-test-prep.js"></script>
+    <script src="data/grammar-rules.js"></script>
+    
+    <!-- Then load modules -->
+    <script src="js/auth.js"></script>
+    <script src="js/flashcards.js"></script>
+    <script src="js/pronunciation.js"></script>
+    <script src="js/quiz.js"></script>
+    <script src="js/progress-tracker.js"></script>
+    
+    <!-- Main script last -->
+    <script src="js/script.js"></script>
 </body>
 </html>
