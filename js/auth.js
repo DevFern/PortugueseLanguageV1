@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
         showTranslation: false
     };
 
-    // DOM elements
-    const navLinks = document.querySelectorAll('nav a');
+    // DOM elements - check if they exist before using
+    const navLinks = document.querySelectorAll('.nav-link');
     const sections = document.querySelectorAll('.section');
     const levelBtns = document.querySelectorAll('.level-btn');
     const themeToggle = document.getElementById('theme-toggle');
@@ -23,99 +23,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeModalBtns = document.querySelectorAll('.close-modal');
     const showSignupBtn = document.getElementById('show-signup');
     const showLoginBtn = document.getElementById('show-login');
-    const startLearningBtn = document.getElementById('start-learning');
-    const scoreElement = document.getElementById('quiz-score');
     const userProfileSection = document.getElementById('user-profile');
     const userNameDisplay = document.getElementById('user-name');
     const logoutBtn = document.getElementById('logout-btn');
     
-    // A2-level content structured by difficulty
-    const lessonContent = {
-        beginner: [
-            {
-                type: 'vocab',
-                word: 'restaurante',
-                portuguese: 'restaurante',
-                translation: 'restaurant',
-                usage: 'Vamos ao restaurante?',
-                englishUsage: 'Shall we go to the restaurant?',
-                category: 'daily life'
-            },
-            {
-                type: 'phrase',
-                portuguese: 'Quanto custa isto?',
-                translation: 'How much is this?',
-                usage: 'Shopping and prices',
-                audioUrl: 'assets/audio/quanto-custa.mp3'
-            },
-            {
-                type: 'vocab',
-                portuguese: 'comboio',
-                translation: 'train',
-                usage: 'European Portuguese uses "comboio" instead of "trem"',
-                category: 'transportation'
-            },
-            {
-                type: 'phrase',
-                portuguese: 'Bom dia, tudo bem?',
-                translation: 'Good morning, how are you?',
-                usage: 'Common morning greeting',
-                audioUrl: 'assets/audio/bom-dia.mp3'
-            }
-        ],
-        intermediate: [
-            {
-                type: 'dialogue',
-                portuguese: 'Poderia me dizer onde fica a estação de comboio?',
-                translation: 'Could you tell me where the train station is?',
-                usage: 'Asking for directions',
-                alternatives: ['Como chego à estação?', 'Onde é a estação?']
-            },
-            {
-                type: 'grammar',
-                portuguese: 'Estou a aprender português',
-                translation: 'I am learning Portuguese',
-                usage: 'Present Continuous - Use "estar a + infinitive" for ongoing actions'
-            },
-            {
-                type: 'dialogue',
-                portuguese: 'Gostaria de reservar uma mesa para dois, por favor.',
-                translation: 'I would like to book a table for two, please.',
-                usage: 'At a restaurant',
-                alternatives: ['Tem mesa para dois?', 'Podemos sentar-nos?']
-            }
-        ],
-        advanced: [
-            {
-                type: 'situation',
-                portuguese: 'Tenho dores de cabeça há três dias',
-                translation: 'I've had headaches for three days',
-                usage: 'At the doctor's office',
-                vocabulary: ['dores', 'sintomas', 'medicação']
-            },
-            {
-                type: 'expression',
-                portuguese: 'Dar com a língua nos dentes',
-                translation: 'To let the cat out of the bag (to reveal a secret)',
-                usage: 'Common idiomatic expression',
-                vocabulary: ['expressão', 'segredo', 'revelar']
-            },
-            {
-                type: 'formal',
-                portuguese: 'Venho por este meio solicitar a vossa colaboração',
-                translation: 'I hereby request your collaboration',
-                usage: 'Formal letter or email',
-                vocabulary: ['formal', 'solicitar', 'colaboração']
-            }
-        ]
-    };
-
+    // Get the start learning button if it exists
+    const startLearningBtn = document.getElementById('get-started-btn');
+    
     // Initialize modules
     const authManager = new AuthManager();
-    const flashcardManager = new FlashcardManager(vocabularyData, lessonContent);
-    const quizManager = new QuizManager(a2TestPrep);
-    const pronunciationTrainer = new PronunciationTrainer();
-    const progressTracker = new ProgressTracker();
+    
+    // Initialize flashcard manager only if vocabularyData exists
+    let flashcardManager = null;
+    if (typeof vocabularyData !== 'undefined' && typeof lessonContent !== 'undefined') {
+        flashcardManager = new FlashcardManager(vocabularyData, lessonContent);
+    } else {
+        console.warn('Vocabulary data or lesson content not found');
+    }
+    
+    // Initialize quiz manager only if a2TestPrep exists
+    let quizManager = null;
+    if (typeof a2TestPrep !== 'undefined') {
+        quizManager = new QuizManager(a2TestPrep);
+    } else {
+        console.warn('Quiz data not found');
+    }
+    
+    // Initialize other modules
+    let pronunciationTrainer = new PronunciationTrainer();
+    let progressTracker = new ProgressTracker();
 
     // Initialize the app
     function init() {
@@ -128,11 +64,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Attach event listeners
         attachEventListeners();
         
-        // Initialize modules
-        flashcardManager.init();
-        quizManager.init();
-        pronunciationTrainer.init();
-        progressTracker.init();
+        // Initialize modules if they exist
+        if (flashcardManager) flashcardManager.init();
+        if (quizManager) quizManager.init();
+        if (pronunciationTrainer) pronunciationTrainer.init();
+        if (progressTracker) progressTracker.init();
     }
 
     // Load user preferences from localStorage
@@ -142,12 +78,12 @@ document.addEventListener('DOMContentLoaded', function() {
             state.theme = savedTheme;
             if (savedTheme === 'dark') {
                 document.body.classList.add('dark-theme');
-                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                if (themeToggle) themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
             }
         }
         
         const savedLevel = localStorage.getItem('level');
-        if (savedLevel) {
+        if (savedLevel && levelBtns) {
             state.level = savedLevel;
             levelBtns.forEach(btn => {
                 if (btn.getAttribute('data-level') === savedLevel) {
@@ -175,183 +111,243 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update UI based on current state
     function updateUI() {
         // Update active section
-        sections.forEach(section => {
-            if (section.id === state.currentSection) {
-                section.classList.add('active');
-            } else {
-                section.classList.remove('active');
-            }
-        });
+        if (sections) {
+            sections.forEach(section => {
+                if (section.id === state.currentSection) {
+                    section.classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                }
+            });
+        }
         
         // Update navigation
-        navLinks.forEach(link => {
-            const sectionId = link.getAttribute('href').substring(1);
-            if (sectionId === state.currentSection) {
-                link.classList.add('active');
-            } else {
-                link.classList.remove('active');
-            }
-        });
+        if (navLinks) {
+            navLinks.forEach(link => {
+                const sectionId = link.getAttribute('data-section');
+                if (sectionId === state.currentSection) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
         
         // Update auth UI
         updateAuthUI();
         
         // Update level buttons
-        levelBtns.forEach(btn => {
-            if (btn.getAttribute('data-level') === state.level) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
+        if (levelBtns) {
+            levelBtns.forEach(btn => {
+                if (btn.getAttribute('data-level') === state.level) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
     }
     
     // Update authentication UI
     function updateAuthUI() {
+        if (!loginBtn || !signupBtn || !userProfileSection) return;
+        
         if (state.isLoggedIn && state.user) {
             loginBtn.classList.add('hidden');
             signupBtn.classList.add('hidden');
             userProfileSection.classList.remove('hidden');
-            userNameDisplay.textContent = state.user.displayName || state.user.email;
+            if (userNameDisplay) {
+                userNameDisplay.textContent = state.user.displayName || state.user.email;
+            }
             
-            // Show dashboard if logged in
-            document.querySelector('.dashboard').classList.remove('hidden');
+            // Show dashboard if it exists
+            const dashboard = document.querySelector('.dashboard');
+            if (dashboard) dashboard.classList.remove('hidden');
         } else {
             loginBtn.classList.remove('hidden');
             signupBtn.classList.remove('hidden');
             userProfileSection.classList.add('hidden');
             
-            // Hide dashboard if not logged in
-            document.querySelector('.dashboard').classList.add('hidden');
+            // Hide dashboard if it exists
+            const dashboard = document.querySelector('.dashboard');
+            if (dashboard) dashboard.classList.add('hidden');
         }
     }
 
     // Attach event listeners
     function attachEventListeners() {
         // Navigation
-        navLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const sectionId = this.getAttribute('href').substring(1);
-                state.currentSection = sectionId;
-                updateUI();
+        if (navLinks) {
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const sectionId = this.getAttribute('data-section');
+                    if (sectionId) {
+                        state.currentSection = sectionId;
+                        updateUI();
+                    }
+                });
             });
-        });
+        }
         
         // Level selection
-        levelBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                levelBtns.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                state.level = this.getAttribute('data-level');
-                localStorage.setItem('level', state.level);
-                
-                // Update content based on level
-                flashcardManager.setLevel(state.level);
-                quizManager.setLevel(state.level);
-                pronunciationTrainer.setLevel(state.level);
+        if (levelBtns) {
+            levelBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    levelBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    state.level = this.getAttribute('data-level');
+                    localStorage.setItem('level', state.level);
+                    
+                    // Update content based on level
+                    if (flashcardManager) flashcardManager.setLevel(state.level);
+                    if (quizManager) quizManager.setLevel(state.level);
+                    if (pronunciationTrainer) pronunciationTrainer.setLevel(state.level);
+                });
             });
-        });
+        }
         
         // Theme toggle
-        themeToggle.addEventListener('click', function() {
-            if (state.theme === 'light') {
-                document.body.classList.add('dark-theme');
-                this.innerHTML = '<i class="fas fa-sun"></i>';
-                state.theme = 'dark';
-            } else {
-                document.body.classList.remove('dark-theme');
-                this.innerHTML = '<i class="fas fa-moon"></i>';
-                state.theme = 'light';
-            }
-            localStorage.setItem('theme', state.theme);
-        });
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function() {
+                if (state.theme === 'light') {
+                    document.body.classList.add('dark-theme');
+                    this.innerHTML = '<i class="fas fa-sun"></i>';
+                    state.theme = 'dark';
+                } else {
+                    document.body.classList.remove('dark-theme');
+                    this.innerHTML = '<i class="fas fa-moon"></i>';
+                    state.theme = 'light';
+                }
+                localStorage.setItem('theme', state.theme);
+            });
+        }
         
         // Start learning button
-        startLearningBtn.addEventListener('click', function() {
-            state.currentSection = 'flashcards';
-            updateUI();
-        });
+        if (startLearningBtn) {
+            startLearningBtn.addEventListener('click', function() {
+                state.currentSection = 'flashcards';
+                updateUI();
+            });
+        }
         
         // Authentication
-        loginBtn.addEventListener('click', function() {
-            loginModal.classList.add('active');
-        });
-        
-        signupBtn.addEventListener('click', function() {
-            signupModal.classList.add('active');
-        });
-        
-        closeModalBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                loginModal.classList.remove('active');
-                signupModal.classList.remove('active');
+        if (loginBtn && loginModal) {
+            loginBtn.addEventListener('click', function() {
+                loginModal.classList.remove('hidden');
+                loginModal.style.display = 'block';
             });
-        });
+        }
         
-        showSignupBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            loginModal.classList.remove('active');
-            signupModal.classList.add('active');
-        });
-        
-        showLoginBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            signupModal.classList.remove('active');
-            loginModal.classList.add('active');
-        });
-        
-        logoutBtn.addEventListener('click', function() {
-            authManager.signOut().then(() => {
-                state.isLoggedIn = false;
-                state.user = null;
-                localStorage.removeItem('user');
-                updateAuthUI();
+        if (signupBtn && signupModal) {
+            signupBtn.addEventListener('click', function() {
+                signupModal.classList.remove('hidden');
+                signupModal.style.display = 'block';
             });
-        });
+        }
+        
+        if (closeModalBtns) {
+            closeModalBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (loginModal) {
+                        loginModal.classList.add('hidden');
+                        loginModal.style.display = 'none';
+                    }
+                    if (signupModal) {
+                        signupModal.classList.add('hidden');
+                        signupModal.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        if (showSignupBtn && loginModal && signupModal) {
+            showSignupBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                loginModal.classList.add('hidden');
+                loginModal.style.display = 'none';
+                signupModal.classList.remove('hidden');
+                signupModal.style.display = 'block';
+            });
+        }
+        
+        if (showLoginBtn && loginModal && signupModal) {
+            showLoginBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                signupModal.classList.add('hidden');
+                signupModal.style.display = 'none';
+                loginModal.classList.remove('hidden');
+                loginModal.style.display = 'block';
+            });
+        }
+        
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function() {
+                authManager.signOut().then(() => {
+                    state.isLoggedIn = false;
+                    state.user = null;
+                    localStorage.removeItem('user');
+                    updateAuthUI();
+                });
+            });
+        }
         
         // Login form submission
-        document.getElementById('login-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            authManager.signIn(email, password).then(user => {
-                if (user) {
-                    state.isLoggedIn = true;
-                    state.user = user;
-                    localStorage.setItem('user', JSON.stringify(user));
-                    loginModal.classList.remove('active');
-                    updateAuthUI();
-                }
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                
+                authManager.signIn(email, password).then(user => {
+                    if (user) {
+                        state.isLoggedIn = true;
+                        state.user = user;
+                        localStorage.setItem('user', JSON.stringify(user));
+                        if (loginModal) {
+                            loginModal.classList.add('hidden');
+                            loginModal.style.display = 'none';
+                        }
+                        updateAuthUI();
+                    }
+                });
             });
-        });
+        }
         
         // Signup form submission
-        document.getElementById('signup-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const name = document.getElementById('signup-name').value;
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-            
-            authManager.signUp(email, password, name).then(user => {
-                if (user) {
-                    state.isLoggedIn = true;
-                    state.user = user;
-                    localStorage.setItem('user', JSON.stringify(user));
-                    signupModal.classList.remove('active');
-                    updateAuthUI();
-                }
+        const signupForm = document.getElementById('signup-form');
+        if (signupForm) {
+            signupForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const name = document.getElementById('signup-name').value;
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+                
+                authManager.signUp(email, password, name).then(user => {
+                    if (user) {
+                        state.isLoggedIn = true;
+                        state.user = user;
+                        localStorage.setItem('user', JSON.stringify(user));
+                        if (signupModal) {
+                            signupModal.classList.add('hidden');
+                            signupModal.style.display = 'none';
+                        }
+                        updateAuthUI();
+                    }
+                });
             });
-        });
+        }
         
         // Close modals when clicking outside
         window.addEventListener('click', function(e) {
-            if (e.target === loginModal) {
-                loginModal.classList.remove('active');
+            if (loginModal && e.target === loginModal) {
+                loginModal.classList.add('hidden');
+                loginModal.style.display = 'none';
             }
-            if (e.target === signupModal) {
-                signupModal.classList.remove('active');
+            if (signupModal && e.target === signupModal) {
+                signupModal.classList.add('hidden');
+                signupModal.style.display = 'none';
             }
         });
     }
@@ -365,6 +361,11 @@ document.addEventListener('DOMContentLoaded', function() {
         let cards = [];
         
         this.init = function() {
+            if (!flashcardContainer) {
+                console.warn('Flashcard container not found');
+                return;
+            }
+            
             loadCards();
             renderCard();
             attachFlashcardEvents();
@@ -378,6 +379,11 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         function loadCards() {
+            if (!vocabularyData) {
+                console.warn('Vocabulary data not found');
+                return;
+            }
+            
             // Load cards from vocabulary data based on current category and level
             if (vocabularyData && vocabularyData[currentCategory]) {
                 if (state.level === 'beginner' && vocabularyData[currentCategory].basic) {
@@ -398,10 +404,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Update total cards count
-            document.getElementById('total-cards').textContent = cards.length;
+            const totalCardsElement = document.getElementById('total-cards');
+            if (totalCardsElement) {
+                totalCardsElement.textContent = cards.length;
+            }
         }
         
         function renderCard() {
+            if (!flashcardContainer) return;
+            
             if (cards.length === 0) {
                 flashcardContainer.innerHTML = '<p>No cards available for this category and level.</p>';
                 return;
@@ -413,23 +424,36 @@ document.addEventListener('DOMContentLoaded', function() {
             const cardUsage = card.usage;
             
             // Update current card number
-            document.getElementById('current-card').textContent = currentCardIndex + 1;
+            const currentCardElement = document.getElementById('current-card');
+            if (currentCardElement) {
+                currentCardElement.textContent = currentCardIndex + 1;
+            }
             
             // Update progress bar
-            const progressPercentage = ((currentCardIndex + 1) / cards.length) * 100;
-            document.querySelector('.progress').style.width = `${progressPercentage}%`;
+            const progressElement = document.querySelector('.progress');
+            if (progressElement) {
+                const progressPercentage = ((currentCardIndex + 1) / cards.length) * 100;
+                progressElement.style.width = `${progressPercentage}%`;
+            }
             
             // Create flashcard HTML
             const flashcard = document.querySelector('.flashcard');
+            if (!flashcard) return;
+            
             const flashcardInner = flashcard.querySelector('.flashcard-inner');
+            if (!flashcardInner) return;
             
             // Update front of card
             const frontWord = flashcardInner.querySelector('.word');
-            frontWord.textContent = cardWord;
+            if (frontWord) {
+                frontWord.textContent = cardWord;
+            }
             
             // Update back of card
             const backTranslation = flashcardInner.querySelector('.translation');
-            backTranslation.textContent = cardTranslation;
+            if (backTranslation) {
+                backTranslation.textContent = cardTranslation;
+            }
             
             const backUsage = flashcardInner.querySelector('.usage');
             if (backUsage) {
@@ -441,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Update audio button if available
             const audioBtn = flashcardInner.querySelector('.audio-btn');
-            if (audioBtn) {
+            if (audioBtn && pronunciationTrainer) {
                 audioBtn.onclick = function() {
                     if (card.audio) {
                         pronunciationTrainer.playAudio(card.audio);
@@ -452,47 +476,70 @@ document.addEventListener('DOMContentLoaded', function() {
         
         function attachFlashcardEvents() {
             // Category selection
-            categoryBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    categoryBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentCategory = this.getAttribute('data-category');
-                    currentCardIndex = 0;
-                    loadCards();
-                    renderCard();
+            if (categoryBtns) {
+                categoryBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        categoryBtns.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        currentCategory = this.getAttribute('data-category');
+                        currentCardIndex = 0;
+                        loadCards();
+                        renderCard();
+                    });
                 });
-            });
+            }
             
             // Flip card
-            document.getElementById('flip-card').addEventListener('click', function() {
-                const flashcard = document.querySelector('.flashcard');
-                flashcard.classList.toggle('flipped');
-            });
+            const flipCardBtn = document.getElementById('flip-card');
+            if (flipCardBtn) {
+                flipCardBtn.addEventListener('click', function() {
+                    const flashcard = document.querySelector('.flashcard');
+                    if (flashcard) {
+                        flashcard.classList.toggle('flipped');
+                    }
+                });
+            }
             
             // Navigate cards
-            document.getElementById('prev-card').addEventListener('click', function() {
-                if (currentCardIndex > 0) {
-                    currentCardIndex--;
-                    renderCard();
-                }
-            });
-            
-            document.getElementById('next-card').addEventListener('click', function() {
-                if (currentCardIndex < cards.length - 1) {
-                    currentCardIndex++;
-                    renderCard();
-                    
-                    // Track progress
-                    if (state.isLoggedIn) {
-                        progressTracker.updateFlashcardProgress(currentCategory, currentCardIndex);
+            const prevCardBtn = document.getElementById('prev-card');
+            if (prevCardBtn) {
+                prevCardBtn.addEventListener('click', function() {
+                    if (currentCardIndex > 0) {
+                        currentCardIndex--;
+                        renderCard();
                     }
-                }
-            });
+                });
+            }
+            
+            const nextCardBtn = document.getElementById('next-card');
+            if (nextCardBtn) {
+                nextCardBtn.addEventListener('click', function() {
+                    if (currentCardIndex < cards.length - 1) {
+                        currentCardIndex++;
+                        renderCard();
+                        
+                        // Track progress
+                        if (state.isLoggedIn && progressTracker) {
+                            progressTracker.updateFlashcardProgress(currentCategory, currentCardIndex);
+                        }
+                    }
+                });
+            }
         }
+    }
+
+    // Define a simple ProgressTracker class if it doesn't exist
+    function ProgressTracker() {
+        this.init = function() {
+            console.log('Progress tracker initialized');
+        };
+        
+        this.updateFlashcardProgress = function(category, index) {
+            console.log(`Updated flashcard progress: ${category}, card ${index + 1}`);
+            // Implement actual progress tracking here
+        };
     }
 
     // Start the app
     init();
 });
-
-// Class definitions for other modules are in their respective files
