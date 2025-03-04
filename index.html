@@ -7,11 +7,13 @@
     <title>Portuguese A2 Learning Platform</title>
     <link rel="icon" href="assets/images/favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/quiz.css">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 </head>
 <body>
     <nav class="nav-bar">
@@ -21,10 +23,11 @@
                 <span>PT-A2 Learn</span>
             </div>
             <div class="nav-links">
-                <a href="index.html" class="nav-link active">Home</a>
+                <a href="#home" class="nav-link active" data-section="home">Home</a>
                 <a href="#flashcards" class="nav-link" data-section="flashcards">Flashcards</a>
                 <a href="#pronunciation" class="nav-link" data-section="pronunciation">Pronunciation</a>
                 <a href="#quiz" class="nav-link" data-section="quiz">Quiz</a>
+                <a href="#a2test" class="nav-link" data-section="a2test">A2 Test</a>
                 <a href="#about" class="nav-link" data-section="about">About</a>
             </div>
             <div class="user-section">
@@ -42,42 +45,44 @@
     </nav>
 
     <main class="container">
-        <section id="hero" class="hero-section">
-            <div class="hero-content">
-                <h1>Master European Portuguese</h1>
-                <p>Interactive learning for A2 citizenship exam preparation</p>
-                <div class="hero-buttons">
-                    <button id="get-started-btn" class="primary-btn">Get Started</button>
-                    <button id="learn-more-btn" class="secondary-btn">Learn More</button>
+        <section id="home" class="section active">
+            <div class="hero-section">
+                <div class="hero-content">
+                    <h1>Master European Portuguese</h1>
+                    <p>Interactive learning for A2 citizenship exam preparation</p>
+                    <div class="hero-buttons">
+                        <button id="get-started-btn" class="primary-btn">Get Started</button>
+                        <button id="learn-more-btn" class="secondary-btn">Learn More</button>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <img src="assets/images/hero-image.png" alt="Learning Portuguese">
                 </div>
             </div>
-            <div class="hero-image">
-                <img src="assets/images/hero-image.png" alt="Learning Portuguese">
-            </div>
-        </section>
 
-        <section id="features" class="features-section">
-            <h2>Features</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <i class="fas fa-book"></i>
-                    <h3>Vocabulary Flashcards</h3>
-                    <p>Learn essential Portuguese words and phrases with interactive flashcards.</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-microphone"></i>
-                    <h3>Pronunciation Practice</h3>
-                    <p>Perfect your accent with audio examples and recording capabilities.</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-tasks"></i>
-                    <h3>A2 Test Preparation</h3>
-                    <p>Practice with quizzes designed to prepare you for the A2 citizenship exam.</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-chart-line"></i>
-                    <h3>Progress Tracking</h3>
-                    <p>Monitor your learning journey with detailed progress statistics.</p>
+            <div class="features-section">
+                <h2>Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-book"></i>
+                        <h3>Citizenship Vocabulary</h3>
+                        <p>Learn essential Portuguese words and phrases for citizenship with interactive flashcards.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-microphone"></i>
+                        <h3>Pronunciation Practice</h3>
+                        <p>Perfect your accent with audio examples and recording capabilities.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-tasks"></i>
+                        <h3>A2 Test Preparation</h3>
+                        <p>Practice with quizzes designed to prepare you for the A2 citizenship exam.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>Progress Tracking</h3>
+                        <p>Monitor your learning journey with detailed progress statistics.</p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -139,112 +144,129 @@
             </div>
         </div>
 
-        <div class="learning-sections">
-            <section id="flashcards" class="section">
-                <h2>Vocabulary Flashcards</h2>
-                <div class="level-selector">
-                    <button class="level-btn active" data-level="beginner">Beginner</button>
-                    <button class="level-btn" data-level="intermediate">Intermediate</button>
-                    <button class="level-btn" data-level="advanced">Advanced</button>
-                </div>
-                <div class="category-selector">
-                    <button class="category-btn active" data-category="citizenship">Citizenship</button>
-                    <button class="category-btn" data-category="daily_life">Daily Life</button>
-                    <button class="category-btn" data-category="transportation">Transportation</button>
-                    <button class="category-btn" data-category="food">Food & Dining</button>
-                </div>
-                <div class="flashcard-container">
-                    <div class="flashcard">
-                        <div class="flashcard-inner">
-                            <div class="flashcard-front">
-                                <h3 class="word">cidadania</h3>
-                                <p class="phonetic">[si-da-da-ni-a]</p>
-                            </div>
-                            <div class="flashcard-back">
-                                <h3 class="translation">citizenship</h3>
-                                <p class="usage">Preciso de obter a cidadania portuguesa.</p>
-                                <p class="english-usage">I need to obtain Portuguese citizenship.</p>
-                            </div>
+        <section id="flashcards" class="section">
+            <h2>Vocabulary Flashcards</h2>
+            <div class="level-selector">
+                <button class="level-btn active" data-level="beginner">Beginner</button>
+                <button class="level-btn" data-level="intermediate">Intermediate</button>
+                <button class="level-btn" data-level="advanced">Advanced</button>
+            </div>
+            <div class="category-selector">
+                <button class="category-btn active" data-category="citizenship">Citizenship</button>
+                <button class="category-btn" data-category="daily_life">Daily Life</button>
+                <button class="category-btn" data-category="transportation">Transportation</button>
+                <button class="category-btn" data-category="food">Food & Dining</button>
+            </div>
+            <div class="flashcard-container">
+                <div class="flashcard">
+                    <div class="flashcard-inner">
+                        <div class="flashcard-front">
+                            <h3 class="word">cidadania</h3>
+                            <p class="phonetic">[si-da-da-ni-a]</p>
+                        </div>
+                        <div class="flashcard-back">
+                            <h3 class="translation">citizenship</h3>
+                            <p class="usage">Preciso de obter a cidadania portuguesa.</p>
+                            <p class="english-usage">I need to obtain Portuguese citizenship.</p>
+                            <button class="audio-btn"><i class="fas fa-volume-up"></i> Listen</button>
                         </div>
                     </div>
-                    <div class="flashcard-controls">
-                        <button id="prev-card" class="flashcard-btn"><i class="fas fa-arrow-left"></i> Previous</button>
-                        <button id="flip-card" class="flashcard-btn"><i class="fas fa-sync"></i> Flip</button>
-                        <button id="next-card" class="flashcard-btn">Next <i class="fas fa-arrow-right"></i></button>
-                    </div>
-                    <div class="flashcard-progress">
-                        <span class="flashcard-progress-text">Card <span id="current-card">1</span> of <span id="total-cards">10</span></span>
-                    </div>
                 </div>
-            </section>
+                <div class="flashcard-controls">
+                    <button id="prev-card" class="flashcard-btn"><i class="fas fa-arrow-left"></i> Previous</button>
+                    <button id="flip-card" class="flashcard-btn"><i class="fas fa-sync"></i> Flip</button>
+                    <button id="next-card" class="flashcard-btn">Next <i class="fas fa-arrow-right"></i></button>
+                </div>
+                <div class="flashcard-progress">
+                    <span class="flashcard-progress-text">Card <span id="current-card">1</span> of <span id="total-cards">10</span></span>
+                </div>
+            </div>
+        </section>
 
-            <section id="pronunciation" class="section">
-                <h2>Pronunciation Practice</h2>
-                <div class="level-selector">
-                    <button class="level-btn active" data-level="beginner">Beginner</button>
-                    <button class="level-btn" data-level="advanced">Advanced</button>
+        <section id="pronunciation" class="section">
+            <h2>Pronunciation Practice</h2>
+            <div class="level-selector">
+                <button class="level-btn active" data-level="beginner">Beginner</button>
+                <button class="level-btn" data-level="advanced">Advanced</button>
+            </div>
+            <div class="pronunciation-container">
+                <div class="word-display">
+                    <h3 class="word">cidadania</h3>
+                    <p class="translation">citizenship</p>
+                    <p class="phonetic">[si-da-da-ni-a]</p>
                 </div>
-                <div class="pronunciation-container">
-                    <div class="word-display">
-                        <h3 class="word">cidadania</h3>
-                        <p class="translation">citizenship</p>
-                        <p class="phonetic">[si-da-da-ni-a]</p>
-                    </div>
-                    <div class="pronunciation-controls">
-                        <button class="play-audio"><i class="fas fa-volume-up"></i> Listen</button>
-                        <button class="record-pronunciation"><i class="fas fa-microphone"></i> Record</button>
-                    </div>
-                    <div class="feedback-display">
-                        <!-- Feedback will be displayed here -->
-                    </div>
-                    <div class="pronunciation-navigation">
-                        <button id="prev-word" class="nav-btn"><i class="fas fa-arrow-left"></i> Previous</button>
-                        <button id="next-word" class="nav-btn">Next <i class="fas fa-arrow-right"></i></button>
-                    </div>
+                <div class="pronunciation-controls">
+                    <button class="play-audio"><i class="fas fa-volume-up"></i> Listen</button>
+                    <button class="record-pronunciation"><i class="fas fa-microphone"></i> Record</button>
                 </div>
-            </section>
+                <div class="audio-wave">
+                    <canvas id="audio-visualizer"></canvas>
+                </div>
+                <div class="feedback-display">
+                    <!-- Feedback will be displayed here -->
+                </div>
+                <div class="pronunciation-navigation">
+                    <button id="prev-word" class="nav-btn"><i class="fas fa-arrow-left"></i> Previous</button>
+                    <button id="next-word" class="nav-btn">Next <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+        </section>
 
-            <section id="quiz" class="section">
-                <h2>A2 Test Preparation</h2>
-                <div class="quiz-type-selector">
-                    <button class="quiz-type-btn active" data-quiz="vocabulary">Vocabulary</button>
-                    <button class="quiz-type-btn" data-quiz="listening">Listening</button>
-                    <button class="quiz-type-btn" data-quiz="grammar">Grammar</button>
-                    <button class="quiz-type-btn" data-quiz="citizenship">Citizenship</button>
-                </div>
-                <div class="level-selector">
-                    <button class="level-btn active" data-level="beginner">Beginner</button>
-                    <button class="level-btn" data-level="advanced">Advanced</button>
-                </div>
-                <div class="quiz-container">
-                    <!-- Quiz content will be dynamically generated -->
-                </div>
-            </section>
+        <section id="quiz" class="section">
+            <h2>Practice Quizzes</h2>
+            <div class="quiz-type-selector">
+                <button class="quiz-type-btn active" data-quiz="vocabulary">Vocabulary</button>
+                <button class="quiz-type-btn" data-quiz="listening">Listening</button>
+                <button class="quiz-type-btn" data-quiz="grammar">Grammar</button>
+                <button class="quiz-type-btn" data-quiz="citizenship">Citizenship</button>
+            </div>
+            <div class="level-selector">
+                <button class="level-btn active" data-level="beginner">Beginner</button>
+                <button class="level-btn" data-level="advanced">Advanced</button>
+            </div>
+            <div class="quiz-container">
+                <!-- Quiz content will be dynamically generated -->
+            </div>
+        </section>
 
-            <section id="about" class="section">
-                <h2>About This App</h2>
-                <div class="about-content">
-                    <p>This European Portuguese Learning App is designed specifically for A2 level learners preparing for the Portuguese citizenship exam. It focuses on the vocabulary, grammar, and cultural knowledge needed to pass the A2 CIPLE exam.</p>
-                    
-                    <h3>Why Learn European Portuguese?</h3>
-                    <p>European Portuguese (spoken in Portugal) differs from Brazilian Portuguese in pronunciation, vocabulary, and some grammar aspects. This app focuses specifically on European Portuguese to help those living in or planning to move to Portugal.</p>
-                    
-                    <h3>A2 Citizenship Requirements</h3>
-                    <p>To obtain Portuguese citizenship, applicants typically need to demonstrate A2 level proficiency in Portuguese. This includes basic communication skills in everyday situations, understanding simple texts, and knowledge about Portuguese culture and society.</p>
-                    
-                    <h3>How to Use This App</h3>
-                    <ul>
-                        <li><strong>Flashcards:</strong> Learn vocabulary through interactive flashcards</li>
-                        <li><strong>Pronunciation:</strong> Practice your pronunciation with audio examples</li>
-                        <li><strong>Quizzes:</strong> Test your knowledge with various quiz types</li>
-                        <li><strong>Progress Tracking:</strong> Monitor your learning journey</li>
-                    </ul>
-                    
-                    <h3>Contact</h3>
-                    <p>For feedback or questions about this app, please contact us at <a href="mailto:contact@pt-a2-learn.com">contact@pt-a2-learn.com</a>.</p>
-                </div>
-            </section>
-        </div>
+        <section id="a2test" class="section">
+            <h2>A2 Test Preparation</h2>
+            <div class="test-section-selector">
+                <button class="test-section-btn active" data-section="listening">Listening</button>
+                <button class="test-section-btn" data-section="reading">Reading</button>
+                <button class="test-section-btn" data-section="speaking">Speaking</button>
+                <button class="test-section-btn" data-section="writing">Writing</button>
+                <button class="test-section-btn" data-section="grammar">Grammar</button>
+            </div>
+            <div class="test-container">
+                <!-- Test content will be dynamically generated -->
+            </div>
+        </section>
+
+        <section id="about" class="section">
+            <h2>About This App</h2>
+            <div class="about-content">
+                <p>This European Portuguese Learning App is designed specifically for A2 level learners preparing for the Portuguese citizenship exam. It focuses on the vocabulary, grammar, and cultural knowledge needed to pass the A2 CIPLE exam.</p>
+                
+                <h3>Why Learn European Portuguese?</h3>
+                <p>European Portuguese (spoken in Portugal) differs from Brazilian Portuguese in pronunciation, vocabulary, and some grammar aspects. This app focuses specifically on European Portuguese to help those living in or planning to move to Portugal.</p>
+                
+                <h3>A2 Citizenship Requirements</h3>
+                <p>To obtain Portuguese citizenship, applicants typically need to demonstrate A2 level proficiency in Portuguese. This includes basic communication skills in everyday situations, understanding simple texts, and knowledge about Portuguese culture and society.</p>
+                
+                <h3>How to Use This App</h3>
+                <ul>
+                    <li><strong>Flashcards:</strong> Learn vocabulary through interactive flashcards</li>
+                    <li><strong>Pronunciation:</strong> Practice your pronunciation with audio examples</li>
+                    <li><strong>Quizzes:</strong> Test your knowledge with various quiz types</li>
+                    <li><strong>A2 Test:</strong> Prepare for all sections of the official A2 exam</li>
+                    <li><strong>Progress Tracking:</strong> Monitor your learning journey</li>
+                </ul>
+                
+                <h3>Contact</h3>
+                <p>For feedback or questions about this app, please contact us at <a href="mailto:contact@pt-a2-learn.com">contact@pt-a2-learn.com</a>.</p>
+            </div>
+        </section>
     </main>
 
     <footer class="footer">
@@ -325,12 +347,13 @@
     <script src="data/a2-test-prep.js"></script>
     
     <!-- Then load modules -->
+    <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/data.js"></script>
     <script src="js/flashcards.js"></script>
     <script src="js/pronunciation.js"></script>
     <script src="js/quiz.js"></script>
-    <script src="js/progress-tracker.js"></script>
+    <script src="js/a2test.js"></script>
     <script src="js/progress.js"></script>
     
     <!-- Main script last -->
