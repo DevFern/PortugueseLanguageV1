@@ -73,6 +73,80 @@ const a2TestPrep = {
                     correct: 0
                 }
             ]
+        },
+        {
+            type: 'dialogue',
+            audio: 'audio/dialogue3.mp3',
+            transcript: 'Na loja de cidadania:\nFuncionário: Bom dia, em que posso ajudar?\nCliente: Bom dia. Gostaria de informações sobre como obter a cidadania portuguesa.\nFuncionário: Claro. É cidadão de um país da União Europeia?\nCliente: Não, sou canadiano.\nFuncionário: Entendo. Para cidadãos não-europeus, precisa de residir legalmente em Portugal por pelo menos cinco anos.\nCliente: Sim, já vivo aqui há seis anos.\nFuncionário: Ótimo. Também precisa de comprovar conhecimento da língua portuguesa, nível A2.',
+            questions: [
+                {
+                    question: 'De que país é o cliente?',
+                    options: [
+                        'Canadá',
+                        'Portugal',
+                        'União Europeia',
+                        'Brasil'
+                    ],
+                    correct: 0
+                },
+                {
+                    question: 'Quanto tempo o cliente vive em Portugal?',
+                    options: [
+                        '6 anos',
+                        '5 anos',
+                        '7 anos',
+                        'Menos de 5 anos'
+                    ],
+                    correct: 0
+                },
+                {
+                    question: 'Qual nível de português é necessário para a cidadania?',
+                    options: [
+                        'A2',
+                        'A1',
+                        'B1',
+                        'B2'
+                    ],
+                    correct: 0
+                }
+            ]
+        },
+        {
+            type: 'dialogue',
+            audio: 'audio/dialogue4.mp3',
+            transcript: 'No centro de saúde:\nRecepcionista: Bom dia, posso ajudar?\nPaciente: Bom dia. Tenho uma consulta marcada com a Dra. Silva às 10h30.\nRecepcionista: Qual é o seu nome, por favor?\nPaciente: Maria Santos.\nRecepcionista: Deixe-me verificar... Sim, está confirmado. Pode esperar na sala de espera, por favor?\nPaciente: Obrigada. Onde fica a casa de banho?\nRecepcionista: É no final do corredor, à direita.',
+            questions: [
+                {
+                    question: 'A que horas é a consulta?',
+                    options: [
+                        '10h30',
+                        '9h30',
+                        '10h00',
+                        '11h00'
+                    ],
+                    correct: 0
+                },
+                {
+                    question: 'O que a paciente pergunta no final?',
+                    options: [
+                        'Onde é a casa de banho',
+                        'Onde é a farmácia',
+                        'Quanto tempo vai demorar',
+                        'Se pode beber água'
+                    ],
+                    correct: 0
+                },
+                {
+                    question: 'Qual é o nome da médica?',
+                    options: [
+                        'Dra. Silva',
+                        'Dra. Santos',
+                        'Dra. Maria',
+                        'Dra. Oliveira'
+                    ],
+                    correct: 0
+                }
+            ]
         }
     ],
     reading: [
@@ -191,6 +265,61 @@ Para usar os transportes públicos, pode comprar bilhetes individuais ou o cart�
                     correct: 0
                 }
             ]
+        },
+        {
+            text: `# Sistema de Saúde em Portugal
+
+O Sistema Nacional de Saúde (SNS) em Portugal oferece cuidados de saúde a todos os cidadãos e residentes legais.
+
+Para aceder aos serviços do SNS, é necessário ter um número de utente e um cartão de utente, que pode ser obtido no centro de saúde da área de residência.
+
+Os centros de saúde são a porta de entrada para o SNS e oferecem cuidados primários, incluindo consultas de medicina geral e familiar, enfermagem e vacinação.
+
+Em caso de emergência, deve dirigir-se às urgências do hospital mais próximo ou ligar para o número de emergência 112.
+
+Os medicamentos prescritos por médicos do SNS têm comparticipação do Estado, o que significa que os utentes pagam apenas uma parte do custo.`,
+            questions: [
+                {
+                    question: 'O que é necessário para aceder aos serviços do SNS?',
+                    options: [
+                        'Número de utente e cartão de utente',
+                        'Apenas o cartão de cidadão',
+                        'Apenas o passaporte',
+                        'Seguro de saúde privado'
+                    ],
+                    correct: 0
+                },
+                {
+                    question: 'Onde se pode obter o cartão de utente?',
+                    options: [
+                        'No centro de saúde da área de residência',
+                        'Em qualquer hospital',
+                        'Na farmácia',
+                        'Na câmara municipal'
+                    ],
+                    correct: 0
+                },
+                {
+                    question: 'Qual é o número de emergência em Portugal?',
+                    options: [
+                        '112',
+                        '911',
+                        '115',
+                        '118'
+                    ],
+                    correct: 0
+                },
+                {
+                    question: 'O que acontece com os medicamentos prescritos por médicos do SNS?',
+                    options: [
+                        'Têm comparticipação do Estado',
+                        'São totalmente gratuitos',
+                        'Não têm qualquer desconto',
+                        'Só são gratuitos para idosos'
+                    ],
+                    correct: 0
+                }
+            ]
         }
     ],
     speaking: [
@@ -240,6 +369,36 @@ Para usar os transportes públicos, pode comprar bilhetes individuais ou o cart�
                 'Quanto tempo devo tomar este medicamento? Há algum efeito secundário?',
                 'Muito obrigado(a) pela sua ajuda, doutor(a).'
             ]
+        },
+        {
+            scenario: 'Procurando Emprego',
+            prompts: [
+                'Apresente-se numa entrevista de emprego.',
+                'Fale sobre a sua experiência profissional.',
+                'Explique por que está interessado neste trabalho.',
+                'Pergunte sobre o horário e o salário.'
+            ],
+            expectedResponses: [
+                'Bom dia, chamo-me [nome] e tenho [idade] anos. Sou formado em [área] e tenho experiência em [setor].',
+                'Trabalhei durante [número] anos como [profissão]. As minhas principais responsabilidades eram [tarefas].',
+                'Estou interessado neste trabalho porque gosto muito desta área e quero desenvolver as minhas competências.',
+                'Qual é o horário de trabalho? E qual é o salário oferecido?'
+            ]
+        },
+        {
+            scenario: 'Na Loja',
+            prompts: [
+                'Peça ajuda a um funcionário para encontrar um produto.',
+                'Pergunte sobre o preço e se há descontos.',
+                'Explique que quer devolver um produto e porquê.',
+                'Peça um recibo.'
+            ],
+            expectedResponses: [
+                'Bom dia, pode ajudar-me a encontrar [produto], por favor?',
+                'Quanto custa este [produto]? Há algum desconto?',
+                'Queria devolver este [produto] porque não funciona corretamente.',
+                'Pode dar-me um recibo, por favor?'
+            ]
         }
     ],
     writing: [
@@ -266,11 +425,46 @@ Seria possível remarcar para a próxima semana?
 
 Obrigado,
 António Silva`
+        },
+        {
+            task: 'Email Formal',
+            instructions: 'Escreva um email para solicitar informações sobre o processo de cidadania.',
+            example: `Exmo. Senhor/Senhora,
+
+Espero que esta mensagem o/a encontre bem.
+
+Venho por este meio solicitar informações sobre o processo de obtenção da cidadania portuguesa. Sou cidadão(ã) canadiano(a) e resido em Portugal há seis anos com autorização de residência válida.
+
+Gostaria de saber quais os documentos necessários para iniciar o processo e onde devo apresentá-los.
+
+Agradeço antecipadamente a sua atenção.
+
+Com os melhores cumprimentos,
+[Seu Nome]`
+        },
+        {
+            task: 'Formulário',
+            instructions: 'Preencha um formulário com os seus dados pessoais.',
+            fields: [
+                'Nome completo',
+                'Data de nascimento',
+                'Nacionalidade',
+                'Morada em Portugal',
+                'Número de telefone',
+                'Email',
+                'Motivo do pedido'
+            ]
         }
     ],
     grammar: [
         {
             topic: 'Presente do Indicativo',
+            explanation: 'O presente do indicativo é usado para falar de ações habituais ou estados permanentes.',
+            examples: [
+                'Eu falo português todos os dias.',
+                'Tu comes no restaurante às vezes?',
+                'Ele vive em Lisboa há cinco anos.'
+            ],
             questions: [
                 {
                     question: 'Eu _____ (falar) português todos os dias.',
@@ -301,11 +495,27 @@ António Silva`
                         'trabalhas'
                     ],
                     correct: 0
+                },
+                {
+                    question: 'Eles _____ (estudar) português.',
+                    options: [
+                        'estudam',
+                        'estuda',
+                        'estudas',
+                        'estudamos'
+                    ],
+                    correct: 0
                 }
             ]
         },
         {
             topic: 'Pretérito Perfeito',
+            explanation: 'O pretérito perfeito é usado para falar de ações concluídas no passado.',
+            examples: [
+                'Ontem eu falei com o meu amigo.',
+                'Tu comeste no restaurante?',
+                'Ele viveu em Lisboa durante cinco anos.'
+            ],
             questions: [
                 {
                     question: 'Ontem eu _____ (ir) ao supermercado.',
@@ -336,8 +546,278 @@ António Silva`
                         'chegámos'
                     ],
                     correct: 0
+                },
+                {
+                    question: 'Nós _____ (viver) em Lisboa no ano passado.',
+                    options: [
+                        'vivemos',
+                        'viveram',
+                        'vivi',
+                        'viveste'
+                    ],
+                    correct: 0
+                }
+            ]
+        },
+        {
+            topic: 'Futuro Simples',
+            explanation: 'O futuro simples é usado para falar de ações que acontecerão no futuro.',
+            examples: [
+                'Amanhã eu falarei com o meu chefe.',
+                'Tu comerás no restaurante?',
+                'Ele viverá em Lisboa no próximo ano.'
+            ],
+            questions: [
+                {
+                    question: 'Amanhã eu _____ (ir) ao cinema.',
+                    options: [
+                        'irei',
+                        'vou',
+                        'fui',
+                        'ia'
+                    ],
+                    correct: 0
+                },
+                {
+                    question: 'Tu _____ (visitar) Portugal no próximo verão?',
+                    options: [
+                        'visitarás',
+                        'visitaste',
+                        'visitas',
+                        'visitavas'
+                    ],
+                    correct: 0
+                },
+                {
+                    question: 'Nós _____ (comprar) uma casa nova.',
+                    options: [
+                        'compraremos',
+                        'compramos',
+                        'comprámos',
+                        'comprávamos'
+                    ],
+                    correct: 0
                 }
             ]
         }
     ],
-    vocabulary
+    vocabulary: [
+        {
+            topic: 'Cidadania e Documentos',
+            words: [
+                {
+                    portuguese: 'cidadania',
+                    english: 'citizenship'
+                },
+                {
+                    portuguese: 'passaporte',
+                    english: 'passport'
+                },
+                {
+                    portuguese: 'cartão de cidadão',
+                    english: 'citizen card'
+                },
+                {
+                    portuguese: 'autorização de residência',
+                    english: 'residence permit'
+                },
+                {
+                    portuguese: 'certidão',
+                    english: 'certificate'
+                },
+                {
+                    portuguese: 'requerimento',
+                    english: 'application form'
+                },
+                {
+                    portuguese: 'nacionalidade',
+                    english: 'nationality'
+                },
+                {
+                    portuguese: 'estrangeiro',
+                    english: 'foreigner'
+                }
+            ]
+        },
+        {
+            topic: 'Saúde',
+            words: [
+                {
+                    portuguese: 'médico/médica',
+                    english: 'doctor'
+                },
+                {
+                    portuguese: 'hospital',
+                    english: 'hospital'
+                },
+                {
+                    portuguese: 'farmácia',
+                    english: 'pharmacy'
+                },
+                {
+                    portuguese: 'consulta',
+                    english: 'appointment'
+                },
+                {
+                    portuguese: 'doente',
+                    english: 'sick'
+                },
+                {
+                    portuguese: 'medicamento',
+                    english: 'medicine'
+                },
+                {
+                    portuguese: 'dor',
+                    english: 'pain'
+                },
+                {
+                    portuguese: 'febre',
+                    english: 'fever'
+                }
+            ]
+        },
+        {
+            topic: 'Transportes',
+            words: [
+                {
+                    portuguese: 'comboio',
+                    english: 'train'
+                },
+                {
+                    portuguese: 'autocarro',
+                    english: 'bus'
+                },
+                {
+                    portuguese: 'metro',
+                    english: 'subway'
+                },
+                {
+                    portuguese: 'elétrico',
+                    english: 'tram'
+                },
+                {
+                    portuguese: 'bilhete',
+                    english: 'ticket'
+                },
+                {
+                    portuguese: 'estação',
+                    english: 'station'
+                },
+                {
+                    portuguese: 'paragem',
+                    english: 'stop'
+                },
+                {
+                    portuguese: 'horário',
+                    english: 'schedule'
+                }
+            ]
+        },
+        {
+            topic: 'Alimentação',
+            words: [
+                {
+                    portuguese: 'restaurante',
+                    english: 'restaurant'
+                },
+                {
+                    portuguese: 'café',
+                    english: 'coffee/café'
+                },
+                {
+                    portuguese: 'pequeno-almoço',
+                    english: 'breakfast'
+                },
+                {
+                    portuguese: 'almoço',
+                    english: 'lunch'
+                },
+                {
+                    portuguese: 'jantar',
+                    english: 'dinner'
+                },
+                {
+                    portuguese: 'prato',
+                    english: 'dish'
+                },
+                {
+                    portuguese: 'bebida',
+                    english: 'drink'
+                },
+                {
+                    portuguese: 'conta',
+                    english: 'bill'
+                }
+            ]
+        }
+    ],
+    mockExam: {
+        reading: {
+            time: 60, // minutes
+            sections: [
+                {
+                    text: 'Um texto sobre a história de Portugal...',
+                    questions: [
+                        // Questions about the text
+                    ]
+                },
+                {
+                    text: 'Um texto sobre a cultura portuguesa...',
+                    questions: [
+                        // Questions about the text
+                    ]
+                }
+            ]
+        },
+        listening: {
+            time: 30, // minutes
+            sections: [
+                {
+                    audio: 'mock-exam-listening-1.mp3',
+                    questions: [
+                        // Questions about the audio
+                    ]
+                },
+                {
+                    audio: 'mock-exam-listening-2.mp3',
+                    questions: [
+                        // Questions about the audio
+                    ]
+                }
+            ]
+        },
+        writing: {
+            time: 60, // minutes
+            tasks: [
+                {
+                    instructions: 'Escreva um email para um amigo sobre as suas férias em Portugal (80-100 palavras).',
+                    points: 20
+                },
+                {
+                    instructions: 'Escreva um texto sobre a sua experiência de aprender português (100-120 palavras).',
+                    points: 30
+                }
+            ]
+        },
+        speaking: {
+            time: 15, // minutes
+            tasks: [
+                {
+                    type: 'Apresentação pessoal',
+                    duration: 2, // minutes
+                    points: 10
+                },
+                {
+                    type: 'Descrição de imagem',
+                    duration: 3, // minutes
+                    points: 15
+                },
+                {
+                    type: 'Diálogo com o examinador',
+                    duration: 5, // minutes
+                    points: 25
+                }
+            ]
+        }
+    }
+};
