@@ -2,11 +2,12 @@ class FlashcardManager {
     constructor() {
         this.cards = [];
         this.currentIndex = 0;
-        this.level = 'beginner';
+        this.level = localStorage.getItem('userLevel') || 'beginner';
         this.category = 'citizenship';
         this.isFlipped = false;
         
         // DOM elements
+        this.flashcardContainer = document.querySelector('.flashcard-container');
         this.flashcardElement = document.querySelector('.flashcard');
         this.wordElement = document.querySelector('.word');
         this.phoneticElement = document.querySelector('.phonetic');
@@ -15,9 +16,13 @@ class FlashcardManager {
         this.englishUsageElement = document.querySelector('.english-usage');
         this.currentCardElement = document.getElementById('current-card');
         this.totalCardsElement = document.getElementById('total-cards');
-        this.audioButton = document.createElement('button');
-        this.audioButton.className = 'audio-btn';
-        this.audioButton.innerHTML = '<i class="fas fa-volume-up"></i> Listen';
+        
+        // Create audio button if it doesn't exist
+        this.audioButton = document.querySelector('.audio-btn') || document.createElement('button');
+        if (!document.querySelector('.audio-btn')) {
+            this.audioButton.className = 'audio-btn';
+            this.audioButton.innerHTML = '<i class="fas fa-volume-up"></i> Listen';
+        }
         
         // Buttons
         this.prevButton = document.getElementById('prev-card');
@@ -25,62 +30,64 @@ class FlashcardManager {
         this.flipButton = document.getElementById('flip-card');
         
         // Level and category selectors
-        this.levelButtons = document.querySelectorAll('#flashcards .level-btn');
+        this.levelButtons = document.querySelectorAll('.level-btn');
         this.categoryButtons = document.querySelectorAll('.category-btn');
     }
     
     init() {
+        console.log('Initializing FlashcardManager');
+        
+        // Check if we have the necessary elements
+        if (!this.flashcardElement) {
+            console.error('Flashcard element not found');
+            return;
+        }
+        
         this.loadCards();
         this.renderCard();
         this.attachEventListeners();
+        
+        // Log initialization success
+        console.log('FlashcardManager initialized with', this.cards.length, 'cards');
     }
     
     loadCards() {
+        console.log('Loading cards for category:', this.category, 'and level:', this.level);
+        
         // Reset cards array
         this.cards = [];
         
         // Check if vocabulary data exists
-        if (!vocabularyData) {
+        if (typeof vocabularyData === 'undefined') {
             console.error('Vocabulary data not found');
             return;
         }
         
+        // Map level names to data structure names
+        const levelMap = {
+            'beginner': 'basic',
+            'intermediate': 'intermediate',
+            'advanced': 'advanced'
+        };
+        
+        const dataLevel = levelMap[this.level] || 'basic';
+        
         // Get cards based on category and level
-        if (this.category === 'citizenship' && vocabularyData.citizenship) {
-            if (this.level === 'beginner' && vocabularyData.citizenship.basic) {
-                this.cards = vocabularyData.citizenship.basic;
-            } else if (this.level === 'advanced' && vocabularyData.citizenship.advanced) {
-                this.cards = vocabularyData.citizenship.advanced;
-            }
-        } else if (this.category === 'daily_life' && vocabularyData.daily_life) {
-            if (this.level === 'beginner' && vocabularyData.daily_life.basic) {
-                this.cards = vocabularyData.daily_life.basic;
-            } else if (this.level === 'advanced' && vocabularyData.daily_life.advanced) {
-                this.cards = vocabularyData.daily_life.advanced;
-            }
-        } else if (this.category === 'transportation' && vocabularyData.transportation) {
-            if (this.level === 'beginner' && vocabularyData.transportation.basic) {
-                this.cards = vocabularyData.transportation.basic;
-            } else if (this.level === 'advanced' && vocabularyData.transportation.advanced) {
-                this.cards = vocabularyData.transportation.advanced;
-            }
-        } else if (this.category === 'food' && vocabularyData.food) {
-            if (this.level === 'beginner' && vocabularyData.food.basic) {
-                this.cards = vocabularyData.food.basic;
-            } else if (this.level === 'advanced' && vocabularyData.food.advanced) {
-                this.cards = vocabularyData.food.advanced;
-            }
+        if (vocabularyData[this.category] && vocabularyData[this.category][dataLevel]) {
+            this.cards = vocabularyData[this.category][dataLevel];
+            console.log(`Loaded ${this.cards.length} cards from vocabulary data`);
         }
         
         // If no cards found, use fallback data
         if (this.cards.length === 0) {
+            console.warn('No cards found for the selected category and level, using fallback data');
             this.cards = [
                 {
                     word: 'cidadania',
                     translation: 'citizenship',
                     usage: 'Preciso de obter a cidadania portuguesa.',
                     englishUsage: 'I need to obtain Portuguese citizenship.',
-                    audio: 'audio/cidadania.mp3',
+                    audio: 'assets/audio/eu-falo.mp3',
                     category: 'citizenship'
                 },
                 {
@@ -88,7 +95,7 @@ class FlashcardManager {
                     translation: 'passport',
                     usage: 'O meu passaporte está válido por mais cinco anos.',
                     englishUsage: 'My passport is valid for five more years.',
-                    audio: 'audio/passaporte.mp3',
+                    audio: 'assets/audio/tu-falas.mp3',
                     category: 'citizenship'
                 },
                 {
@@ -96,7 +103,7 @@ class FlashcardManager {
                     translation: 'residence',
                     usage: 'Tenho autorização de residência em Portugal.',
                     englishUsage: 'I have residence authorization in Portugal.',
-                    audio: 'audio/residencia.mp3',
+                    audio: 'assets/audio/ele-fala.mp3',
                     category: 'citizenship'
                 }
             ];
@@ -111,10 +118,14 @@ class FlashcardManager {
     renderCard() {
         if (this.cards.length === 0) {
             console.error('No cards available');
+            if (this.flashcardContainer) {
+                this.flashcardContainer.innerHTML = '<p>No cards available for this category and level.</p>';
+            }
             return;
         }
         
         const card = this.cards[this.currentIndex];
+        console.log('Rendering card:', card);
         
         // Update card content
         if (this.wordElement) {
@@ -123,11 +134,16 @@ class FlashcardManager {
         
         if (this.phoneticElement) {
             // Simple phonetic representation (could be improved with actual phonetic data)
-            this.phoneticElement.textContent = `[${(card.word || card.portuguese || '').split('').join('-')}]`;
+            if (card.phonetic) {
+                this.phoneticElement.textContent = card.phonetic;
+            } else {
+                const word = card.word || card.portuguese || '';
+                this.phoneticElement.textContent = `[${word.split('').join('-')}]`;
+            }
         }
         
         if (this.translationElement) {
-            this.translationElement.textContent = card.translation || '';
+            this.translationElement.textContent = card.translation || card.english || '';
         }
         
         if (this.usageElement) {
@@ -168,13 +184,16 @@ class FlashcardManager {
     }
     
     playAudio(audioSrc) {
+        console.log('Playing audio:', audioSrc);
         const audio = new Audio(audioSrc);
         audio.play().catch(error => {
             console.error('Error playing audio:', error);
+            alert('Could not play audio. Make sure audio files are available.');
         });
     }
     
     flipCard() {
+        console.log('Flipping card');
         this.isFlipped = !this.isFlipped;
         if (this.flashcardElement) {
             if (this.isFlipped) {
@@ -186,6 +205,7 @@ class FlashcardManager {
     }
     
     nextCard() {
+        console.log('Next card');
         if (this.currentIndex < this.cards.length - 1) {
             this.currentIndex++;
         } else {
@@ -195,6 +215,7 @@ class FlashcardManager {
     }
     
     prevCard() {
+        console.log('Previous card');
         if (this.currentIndex > 0) {
             this.currentIndex--;
         } else {
@@ -204,6 +225,7 @@ class FlashcardManager {
     }
     
     setLevel(level) {
+        console.log('Setting level to:', level);
         this.level = level;
         this.currentIndex = 0;
         this.loadCards();
@@ -211,6 +233,7 @@ class FlashcardManager {
     }
     
     setCategory(category) {
+        console.log('Setting category to:', category);
         this.category = category;
         this.currentIndex = 0;
         this.loadCards();
@@ -218,47 +241,91 @@ class FlashcardManager {
     }
     
     attachEventListeners() {
+        console.log('Attaching flashcard event listeners');
+        
         // Flip card
         if (this.flipButton) {
-            this.flipButton.addEventListener('click', () => this.flipCard());
+            console.log('Attaching flip button listener');
+            // Remove any existing listeners
+            this.flipButton.removeEventListener('click', this.flipCard.bind(this));
+            // Add new listener
+            this.flipButton.addEventListener('click', () => {
+                console.log('Flip button clicked');
+                this.flipCard();
+            });
+        } else {
+            console.warn('Flip button not found');
         }
         
         // Next card
         if (this.nextButton) {
-            this.nextButton.addEventListener('click', () => this.nextCard());
+            console.log('Attaching next button listener');
+            // Remove any existing listeners
+            this.nextButton.removeEventListener('click', this.nextCard.bind(this));
+            // Add new listener
+            this.nextButton.addEventListener('click', () => {
+                console.log('Next button clicked');
+                this.nextCard();
+            });
+        } else {
+            console.warn('Next button not found');
         }
         
         // Previous card
         if (this.prevButton) {
-            this.prevButton.addEventListener('click', () => this.prevCard());
+            console.log('Attaching previous button listener');
+            // Remove any existing listeners
+            this.prevButton.removeEventListener('click', this.prevCard.bind(this));
+            // Add new listener
+            this.prevButton.addEventListener('click', () => {
+                console.log('Previous button clicked');
+                this.prevCard();
+            });
+        } else {
+            console.warn('Previous button not found');
         }
         
         // Level selection
-        this.levelButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const level = btn.getAttribute('data-level');
-                this.setLevel(level);
-                
-                // Update active button
-                this.levelButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+        if (this.levelButtons && this.levelButtons.length > 0) {
+            console.log('Attaching level button listeners');
+            this.levelButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const level = btn.getAttribute('data-level');
+                    if (level) {
+                        this.setLevel(level);
+                        
+                        // Update active button
+                        this.levelButtons.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    }
+                });
             });
-        });
+        } else {
+            console.warn('Level buttons not found');
+        }
         
         // Category selection
-        this.categoryButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const category = btn.getAttribute('data-category');
-                this.setCategory(category);
-                
-                // Update active button
-                this.categoryButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+        if (this.categoryButtons && this.categoryButtons.length > 0) {
+            console.log('Attaching category button listeners');
+            this.categoryButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const category = btn.getAttribute('data-category');
+                    if (category) {
+                        this.setCategory(category);
+                        
+                        // Update active button
+                        this.categoryButtons.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    }
+                });
             });
-        });
+        } else {
+            console.warn('Category buttons not found');
+        }
         
         // Keyboard navigation
-        document.addEventListener('keydown', (e) => {
+        document.removeEventListener('keydown', this.handleKeyDown);
+        this.handleKeyDown = (e) => {
             if (document.querySelector('#flashcards.active')) {
                 if (e.key === 'ArrowRight') {
                     this.nextCard();
@@ -269,6 +336,19 @@ class FlashcardManager {
                     e.preventDefault(); // Prevent scrolling with spacebar
                 }
             }
-        });
+        };
+        document.addEventListener('keydown', this.handleKeyDown);
+        
+        console.log('All flashcard event listeners attached');
+    }
+    
+    // Helper method to shuffle array
+    shuffleArray(array) {
+        const newArray = [...array];
+        for (let i = newArray.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+        }
+        return newArray;
     }
 }
