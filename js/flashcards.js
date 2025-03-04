@@ -15,6 +15,9 @@ class FlashcardManager {
         this.englishUsageElement = document.querySelector('.english-usage');
         this.currentCardElement = document.getElementById('current-card');
         this.totalCardsElement = document.getElementById('total-cards');
+        this.audioButton = document.createElement('button');
+        this.audioButton.className = 'audio-btn';
+        this.audioButton.innerHTML = '<i class="fas fa-volume-up"></i> Listen';
         
         // Buttons
         this.prevButton = document.getElementById('prev-card');
@@ -50,11 +53,23 @@ class FlashcardManager {
                 this.cards = vocabularyData.citizenship.advanced;
             }
         } else if (this.category === 'daily_life' && vocabularyData.daily_life) {
-            this.cards = vocabularyData.daily_life;
+            if (this.level === 'beginner' && vocabularyData.daily_life.basic) {
+                this.cards = vocabularyData.daily_life.basic;
+            } else if (this.level === 'advanced' && vocabularyData.daily_life.advanced) {
+                this.cards = vocabularyData.daily_life.advanced;
+            }
         } else if (this.category === 'transportation' && vocabularyData.transportation) {
-            this.cards = vocabularyData.transportation;
+            if (this.level === 'beginner' && vocabularyData.transportation.basic) {
+                this.cards = vocabularyData.transportation.basic;
+            } else if (this.level === 'advanced' && vocabularyData.transportation.advanced) {
+                this.cards = vocabularyData.transportation.advanced;
+            }
         } else if (this.category === 'food' && vocabularyData.food) {
-            this.cards = vocabularyData.food;
+            if (this.level === 'beginner' && vocabularyData.food.basic) {
+                this.cards = vocabularyData.food.basic;
+            } else if (this.level === 'advanced' && vocabularyData.food.advanced) {
+                this.cards = vocabularyData.food.advanced;
+            }
         }
         
         // If no cards found, use fallback data
@@ -64,21 +79,24 @@ class FlashcardManager {
                     word: 'cidadania',
                     translation: 'citizenship',
                     usage: 'Preciso de obter a cidadania portuguesa.',
-                    audio: 'cidadania.mp3',
+                    englishUsage: 'I need to obtain Portuguese citizenship.',
+                    audio: 'audio/cidadania.mp3',
                     category: 'citizenship'
                 },
                 {
                     word: 'passaporte',
                     translation: 'passport',
                     usage: 'O meu passaporte está válido por mais cinco anos.',
-                    audio: 'passaporte.mp3',
+                    englishUsage: 'My passport is valid for five more years.',
+                    audio: 'audio/passaporte.mp3',
                     category: 'citizenship'
                 },
                 {
                     word: 'residência',
                     translation: 'residence',
                     usage: 'Tenho autorização de residência em Portugal.',
-                    audio: 'residencia.mp3',
+                    englishUsage: 'I have residence authorization in Portugal.',
+                    audio: 'audio/residencia.mp3',
                     category: 'citizenship'
                 }
             ];
@@ -120,6 +138,18 @@ class FlashcardManager {
             this.englishUsageElement.textContent = card.englishUsage || '';
         }
         
+        // Add audio button if card has audio
+        if (card.audio) {
+            const audioContainer = document.querySelector('.flashcard-front');
+            if (audioContainer && !audioContainer.querySelector('.audio-btn')) {
+                audioContainer.appendChild(this.audioButton);
+            }
+            
+            this.audioButton.onclick = () => {
+                this.playAudio(card.audio);
+            };
+        }
+        
         // Update current card number
         if (this.currentCardElement) {
             this.currentCardElement.textContent = this.currentIndex + 1;
@@ -135,6 +165,13 @@ class FlashcardManager {
         if (window.progressTracker) {
             window.progressTracker.updateFlashcardProgress(this.category, this.currentIndex, this.cards.length);
         }
+    }
+    
+    playAudio(audioSrc) {
+        const audio = new Audio(audioSrc);
+        audio.play().catch(error => {
+            console.error('Error playing audio:', error);
+        });
     }
     
     flipCard() {
