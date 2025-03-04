@@ -1,498 +1,530 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // App state
-    const state = {
-        currentSection: 'welcome',
-        level: 'beginner',
-        theme: 'light',
-        isLoggedIn: false,
-        user: null,
-        lessonIndex: 0,
-        score: 0,
-        showTranslation: false
-    };
-
-    // DOM elements
-    const navLinks = document.querySelectorAll('nav a');
-    const sections = document.querySelectorAll('.section');
-    const levelBtns = document.querySelectorAll('.level-btn');
-    const themeToggle = document.getElementById('theme-toggle');
-    const loginBtn = document.getElementById('login-btn');
-    const signupBtn = document.getElementById('signup-btn');
-    const loginModal = document.getElementById('login-modal');
-    const signupModal = document.getElementById('signup-modal');
-    const closeModalBtns = document.querySelectorAll('.close-modal');
-    const showSignupBtn = document.getElementById('show-signup');
-    const showLoginBtn = document.getElementById('show-login');
-    const startLearningBtn = document.getElementById('start-learning');
-    const scoreElement = document.getElementById('quiz-score');
-    const userProfileSection = document.getElementById('user-profile');
-    const userNameDisplay = document.getElementById('user-name');
-    const logoutBtn = document.getElementById('logout-btn');
-    
-    // A2-level content structured by difficulty
-    const lessonContent = {
-        beginner: [
-            {
-                type: 'vocab',
-                word: 'restaurante',
-                portuguese: 'restaurante',
-                translation: 'restaurant',
-                usage: 'Vamos ao restaurante?',
-                englishUsage: 'Shall we go to the restaurant?',
-                category: 'daily life'
-            },
-            {
-                type: 'phrase',
-                portuguese: 'Quanto custa isto?',
-                translation: 'How much is this?',
-                usage: 'Shopping and prices',
-                audioUrl: 'assets/audio/quanto-custa.mp3'
-            },
-            {
-                type: 'vocab',
-                portuguese: 'comboio',
-                translation: 'train',
-                usage: 'European Portuguese uses "comboio" instead of "trem"',
-                category: 'transportation'
-            },
-            {
-                type: 'phrase',
-                portuguese: 'Bom dia, tudo bem?',
-                translation: 'Good morning, how are you?',
-                usage: 'Common morning greeting',
-                audioUrl: 'assets/audio/bom-dia.mp3'
-            }
-        ],
-        intermediate: [
-            {
-                type: 'dialogue',
-                portuguese: 'Poderia me dizer onde fica a estação de comboio?',
-                translation: 'Could you tell me where the train station is?',
-                usage: 'Asking for directions',
-                alternatives: ['Como chego à estação?', 'Onde é a estação?']
-            },
-            {
-                type: 'grammar',
-                portuguese: 'Estou a aprender português',
-                translation: 'I am learning Portuguese',
-                usage: 'Present Continuous - Use "estar a + infinitive" for ongoing actions'
-            },
-            {
-                type: 'dialogue',
-                portuguese: 'Gostaria de reservar uma mesa para dois, por favor.',
-                translation: 'I would like to book a table for two, please.',
-                usage: 'At a restaurant',
-                alternatives: ['Tem mesa para dois?', 'Podemos sentar-nos?']
-            }
-        ],
-        advanced: [
-            {
-                type: 'situation',
-                portuguese: 'Tenho dores de cabeça há três dias',
-                translation: 'I've had headaches for three days',
-                usage: 'At the doctor's office',
-                vocabulary: ['dores', 'sintomas', 'medicação']
-            },
-            {
-                type: 'expression',
-                portuguese: 'Dar com a língua nos dentes',
-                translation: 'To let the cat out of the bag (to reveal a secret)',
-                usage: 'Common idiomatic expression',
-                vocabulary: ['expressão', 'segredo', 'revelar']
-            },
-            {
-                type: 'formal',
-                portuguese: 'Venho por este meio solicitar a vossa colaboração',
-                translation: 'I hereby request your collaboration',
-                usage: 'Formal letter or email',
-                vocabulary: ['formal', 'solicitar', 'colaboração']
-            }
-        ]
-    };
-
-    // Initialize modules
-    const authManager = new AuthManager();
-    const flashcardManager = new FlashcardManager(vocabularyData, lessonContent);
-    const quizManager = new QuizManager(a2TestPrep);
-    const pronunciationTrainer = new PronunciationTrainer();
-    const progressTracker = new ProgressTracker();
-
-    // Initialize the app
-    function init() {
-        // Load user preferences from localStorage
-        loadUserPreferences();
+class PronunciationTrainer {
+    constructor() {
+        this.words = [];
+        this.currentIndex = 0;
+        this.level = 'beginner';
+        this.isRecording = false;
+        this.mediaRecorder = null;
+        this.audioChunks = [];
+        this.recordedAudio = null;
         
-        // Initialize UI based on state
-        updateUI();
+        // DOM elements
+        this.wordDisplay = document.querySelector('.word-display');
+        this.wordElement = this.wordDisplay ? this.wordDisplay.querySelector('.word') : null;
+        this.translationElement = this.wordDisplay ? this.wordDisplay.querySelector('.translation') : null;
+        this.phoneticElement = this.wordDisplay ? this.wordDisplay.querySelector('.phonetic') : null;
+        this.playButton = document.querySelector('.play-audio');
+        this.recordButton = document.querySelector('.record-pronunciation');
+        this.feedbackDisplay = document.querySelector('.feedback-display');
+        this.prevButton = document.getElementById('prev-word');
+        this.nextButton = document.getElementById('next-word');
         
-        // Attach event listeners
-        attachEventListeners();
-        
-        // Initialize modules
-        flashcardManager.init();
-        quizManager.init();
-        pronunciationTrainer.init();
-        progressTracker.init();
+        // Level selectors
+        this.levelButtons = document.querySelectorAll('#pronunciation .level-btn');
     }
-
-    // Load user preferences from localStorage
-    function loadUserPreferences() {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            state.theme = savedTheme;
-            if (savedTheme === 'dark') {
-                document.body.classList.add('dark-theme');
-                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-            }
+    
+    init() {
+        this.loadWords();
+        this.renderWord();
+        this.attachEventListeners();
+        this.checkMicrophonePermission();
+    }
+    
+    loadWords() {
+        // Reset words array
+        this.words = [];
+        
+        // Check if vocabulary data exists
+        if (!vocabularyData) {
+            console.error('Vocabulary data not found');
+            return;
         }
         
-        const savedLevel = localStorage.getItem('level');
-        if (savedLevel) {
-            state.level = savedLevel;
-            levelBtns.forEach(btn => {
-                if (btn.getAttribute('data-level') === savedLevel) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
+        // Get words from all categories for pronunciation practice
+        Object.keys(vocabularyData).forEach(category => {
+            if (vocabularyData[category]) {
+                if (this.level === 'beginner' && vocabularyData[category].basic) {
+                    this.words = [...this.words, ...vocabularyData[category].basic];
+                } else if (this.level === 'advanced' && vocabularyData[category].advanced) {
+                    this.words = [...this.words, ...vocabularyData[category].advanced];
+                }
+            }
+        });
+        
+        // If no words found, use fallback data
+        if (this.words.length === 0) {
+            this.words = [
+                {
+                    word: 'cidadania',
+                    translation: 'citizenship',
+                    usage: 'Preciso de obter a cidadania portuguesa.',
+                    englishUsage: 'I need to obtain Portuguese citizenship.',
+                    audio: 'audio/cidadania.mp3',
+                    category: 'citizenship'
+                },
+                {
+                    word: 'passaporte',
+                    translation: 'passport',
+                    usage: 'O meu passaporte está válido por mais cinco anos.',
+                    englishUsage: 'My passport is valid for five more years.',
+                    audio: 'audio/passaporte.mp3',
+                    category: 'citizenship'
+                },
+                {
+                    word: 'residência',
+                    translation: 'residence',
+                    usage: 'Tenho autorização de residência em Portugal.',
+                    englishUsage: 'I have residence authorization in Portugal.',
+                    audio: 'audio/residencia.mp3',
+                    category: 'citizenship'
+                }
+            ];
+        }
+        
+        // Shuffle the words for variety
+        this.words = this.shuffleArray(this.words);
+    }
+    
+    renderWord() {
+        if (this.words.length === 0) {
+            console.error('No words available');
+            return;
+        }
+        
+        const word = this.words[this.currentIndex];
+        
+        // Update word display
+        if (this.wordElement) {
+            this.wordElement.textContent = word.word || word.portuguese || '';
+        }
+        
+        if (this.translationElement) {
+            this.translationElement.textContent = word.translation || '';
+        }
+        
+        if (this.phoneticElement) {
+            // Simple phonetic representation - this could be improved with actual phonetic data
+            this.phoneticElement.textContent = `[${this.generateSimplePhonetic(word.word || word.portuguese || '')}]`;
+        }
+        
+        // Reset feedback display
+        if (this.feedbackDisplay) {
+            this.feedbackDisplay.textContent = 'Listen to the pronunciation and practice saying the word';
+        }
+        
+        // Update progress if progress tracker exists
+        if (window.progressTracker) {
+            window.progressTracker.updateListeningProgress(this.currentIndex, this.words.length);
+        }
+    }
+    
+    generateSimplePhonetic(word) {
+        // This is a very simple phonetic representation
+        // In a real app, you would use a proper phonetic database or API
+        return word.split('').join('-');
+    }
+    
+    playAudio(audioSrc) {
+        const word = this.words[this.currentIndex];
+        const audioPath = audioSrc || (word ? word.audio : null);
+        
+        if (!audioPath) {
+            console.error('No audio available for this word');
+            if (this.feedbackDisplay) {
+                this.feedbackDisplay.textContent = 'No audio available for this word';
+            }
+            return;
+        }
+        
+        const audio = new Audio(audioPath);
+        audio.play().catch(error => {
+            console.error('Error playing audio:', error);
+            if (this.feedbackDisplay) {
+                this.feedbackDisplay.textContent = 'Error playing audio. Please try again.';
+            }
+        });
+    }
+    
+    startRecording() {
+        if (!this.mediaRecorder) {
+            console.error('Media recorder not initialized');
+            return;
+        }
+        
+        this.isRecording = true;
+        this.audioChunks = [];
+        this.mediaRecorder.start();
+        
+        if (this.recordButton) {
+            this.recordButton.classList.add('recording');
+            this.recordButton.innerHTML = '<i class="fas fa-stop"></i> Stop';
+        }
+        
+        if (this.feedbackDisplay) {
+            this.feedbackDisplay.textContent = 'Recording... Speak now';
+        }
+    }
+    
+    stopRecording() {
+        if (!this.mediaRecorder || !this.isRecording) {
+            return;
+        }
+        
+        this.isRecording = false;
+        this.mediaRecorder.stop();
+        
+        if (this.recordButton) {
+            this.recordButton.classList.remove('recording');
+            this.recordButton.innerHTML = '<i class="fas fa-microphone"></i> Record';
+        }
+        
+        if (this.feedbackDisplay) {
+            this.feedbackDisplay.textContent = 'Processing your pronunciation...';
+        }
+    }
+    
+    provideFeedback() {
+        // In a real implementation, this would compare the recorded audio with the correct pronunciation
+        // using speech recognition or audio analysis
+        // For now, we'll provide simulated feedback
+        
+        const feedbackOptions = [
+            'Good pronunciation! Your accent is improving.',
+            'Try to emphasize the stressed syllable more.',
+            'Pay attention to the vowel sounds, they\'re different from English.',
+            'Great job! Keep practicing this word.',
+            'Try to speak a bit slower and clearer.'
+        ];
+        
+        const randomFeedback = feedbackOptions[Math.floor(Math.random() * feedbackOptions.length)];
+        
+        if (this.feedbackDisplay) {
+            this.feedbackDisplay.innerHTML = `
+                <p><strong>Feedback:</strong> ${randomFeedback}</p>
+                <div class="feedback-actions">
+                    <button class="play-recorded">Play Your Recording</button>
+                    <button class="play-correct">Play Correct Pronunciation</button>
+                </div>
+            `;
+            
+            const playRecordedButton = this.feedbackDisplay.querySelector('.play-recorded');
+            if (playRecordedButton && this.recordedAudio) {
+                playRecordedButton.addEventListener('click', () => {
+                    this.recordedAudio.play();
+                });
+            }
+            
+            const playCorrectButton = this.feedbackDisplay.querySelector('.play-correct');
+            if (playCorrectButton) {
+                playCorrectButton.addEventListener('click', () => {
+                    const word = this.words[this.currentIndex];
+                    if (word && word.audio) {
+                        this.playAudio(word.audio);
+                    }
+                });
+            }
+        }
+    }
+    
+    checkMicrophonePermission() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.error('Media devices API not supported');
+            if (this.feedbackDisplay) {
+                this.feedbackDisplay.textContent = 'Your browser does not support audio recording.';
+            }
+            if (this.recordButton) {
+                this.recordButton.disabled = true;
+            }
+            return;
+        }
+        
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                this.initializeMediaRecorder(stream);
+            })
+            .catch(error => {
+                console.error('Error accessing microphone:', error);
+                if (this.feedbackDisplay) {
+                    this.feedbackDisplay.textContent = 'Microphone access denied. Please allow microphone access to use this feature.';
+                }
+                if (this.recordButton) {
+                    this.recordButton.disabled = true;
+                }
+            });
+    }
+    
+    initializeMediaRecorder(stream) {
+        try {
+            this.mediaRecorder = new MediaRecorder(stream);
+            
+            this.mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    this.audioChunks.push(event.data);
+                }
+            };
+            
+            this.mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' });
+                this.recordedAudio = new Audio(URL.createObjectURL(audioBlob));
+                this.provideFeedback();
+            };
+        } catch (error) {
+            console.error('Error initializing media recorder:', error);
+            if (this.feedbackDisplay) {
+                this.feedbackDisplay.textContent = 'Error initializing audio recording. Please try again.';
+            }
+        }
+    }
+    
+    nextWord() {
+        if (this.currentIndex < this.words.length - 1) {
+            this.currentIndex++;
+        } else {
+            this.currentIndex = 0; // Loop back to the first word
+        }
+        this.renderWord();
+    }
+    
+    prevWord() {
+        if (this.currentIndex > 0) {
+            this.currentIndex--;
+        } else {
+            this.currentIndex = this.words.length - 1; // Loop to the last word
+        }
+        this.renderWord();
+    }
+    
+    setLevel(level) {
+        this.level = level;
+        this.currentIndex = 0;
+        this.loadWords();
+        this.renderWord();
+    }
+    
+    attachEventListeners() {
+        // Play audio button
+        if (this.playButton) {
+            this.playButton.addEventListener('click', () => {
+                const word = this.words[this.currentIndex];
+                if (word && word.audio) {
+                    this.playAudio(word.audio);
                 }
             });
         }
         
-        // Check if user is logged in
-        const userData = localStorage.getItem('user');
-        if (userData) {
-            try {
-                state.user = JSON.parse(userData);
-                state.isLoggedIn = true;
-                updateAuthUI();
-            } catch (e) {
-                console.error('Error parsing user data:', e);
-                localStorage.removeItem('user');
-            }
-        }
-    }
-
-    // Update UI based on current state
-    function updateUI() {
-        // Update active section
-        sections.forEach(section => {
-            if (section.id === state.currentSection) {
-                section.classList.add('active');
-            } else {
-                section.classList.remove('active');
-            }
-        });
-        
-        // Update navigation
-        navLinks.forEach(link => {
-            const sectionId = link.getAttribute('href').substring(1);
-            if (sectionId === state.currentSection) {
-                link.classList.add('active');
-            } else {
-                link.classList.remove('active');
-            }
-        });
-        
-        // Update auth UI
-        updateAuthUI();
-        
-        // Update level buttons
-        levelBtns.forEach(btn => {
-            if (btn.getAttribute('data-level') === state.level) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-    }
-    
-    // Update authentication UI
-    function updateAuthUI() {
-        if (state.isLoggedIn && state.user) {
-            loginBtn.classList.add('hidden');
-            signupBtn.classList.add('hidden');
-            userProfileSection.classList.remove('hidden');
-            userNameDisplay.textContent = state.user.displayName || state.user.email;
-            
-            // Show dashboard if logged in
-            document.querySelector('.dashboard').classList.remove('hidden');
-        } else {
-            loginBtn.classList.remove('hidden');
-            signupBtn.classList.remove('hidden');
-            userProfileSection.classList.add('hidden');
-            
-            // Hide dashboard if not logged in
-            document.querySelector('.dashboard').classList.add('hidden');
-        }
-    }
-
-    // Attach event listeners
-    function attachEventListeners() {
-        // Navigation
-        navLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const sectionId = this.getAttribute('href').substring(1);
-                state.currentSection = sectionId;
-                updateUI();
+        // Record button
+        if (this.recordButton) {
+            this.recordButton.addEventListener('click', () => {
+                if (this.isRecording) {
+                    this.stopRecording();
+                } else {
+                    this.startRecording();
+                }
             });
-        });
+        }
+        
+        // Navigation buttons
+        if (this.prevButton) {
+            this.prevButton.addEventListener('click', () => this.prevWord());
+        }
+        
+        if (this.nextButton) {
+            this.nextButton.addEventListener('click', () => this.nextWord());
+        }
         
         // Level selection
-        levelBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                levelBtns.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                state.level = this.getAttribute('data-level');
-                localStorage.setItem('level', state.level);
+        this.levelButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const level = btn.getAttribute('data-level');
+                this.setLevel(level);
                 
-                // Update content based on level
-                flashcardManager.setLevel(state.level);
-                quizManager.setLevel(state.level);
-                pronunciationTrainer.setLevel(state.level);
+                // Update active button
+                this.levelButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
             });
         });
         
-        // Theme toggle
-        themeToggle.addEventListener('click', function() {
-            if (state.theme === 'light') {
-                document.body.classList.add('dark-theme');
-                this.innerHTML = '<i class="fas fa-sun"></i>';
-                state.theme = 'dark';
-            } else {
-                document.body.classList.remove('dark-theme');
-                this.innerHTML = '<i class="fas fa-moon"></i>';
-                state.theme = 'light';
-            }
-            localStorage.setItem('theme', state.theme);
-        });
-        
-        // Start learning button
-        startLearningBtn.addEventListener('click', function() {
-            state.currentSection = 'flashcards';
-            updateUI();
-        });
-        
-        // Authentication
-        loginBtn.addEventListener('click', function() {
-            loginModal.classList.add('active');
-        });
-        
-        signupBtn.addEventListener('click', function() {
-            signupModal.classList.add('active');
-        });
-        
-        closeModalBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                loginModal.classList.remove('active');
-                signupModal.classList.remove('active');
-            });
-        });
-        
-        showSignupBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            loginModal.classList.remove('active');
-            signupModal.classList.add('active');
-        });
-        
-        showLoginBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            signupModal.classList.remove('active');
-            loginModal.classList.add('active');
-        });
-        
-        logoutBtn.addEventListener('click', function() {
-            authManager.signOut().then(() => {
-                state.isLoggedIn = false;
-                state.user = null;
-                localStorage.removeItem('user');
-                updateAuthUI();
-            });
-        });
-        
-        // Login form submission
-        document.getElementById('login-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            authManager.signIn(email, password).then(user => {
-                if (user) {
-                    state.isLoggedIn = true;
-                    state.user = user;
-                    localStorage.setItem('user', JSON.stringify(user));
-                    loginModal.classList.remove('active');
-                    updateAuthUI();
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (document.querySelector('#pronunciation.active')) {
+                if (e.key === 'ArrowRight') {
+                    this.nextWord();
+                } else if (e.key === 'ArrowLeft') {
+                    this.prevWord();
+                } else if (e.key === ' ' || e.key === 'Spacebar') {
+                    const word = this.words[this.currentIndex];
+                    if (word && word.audio) {
+                        this.playAudio(word.audio);
+                    }
+                    e.preventDefault(); // Prevent scrolling with spacebar
+                } else if (e.key === 'r' || e.key === 'R') {
+                    if (this.isRecording) {
+                        this.stopRecording();
+                    } else {
+                        this.startRecording();
+                    }
                 }
-            });
-        });
-        
-        // Signup form submission
-        document.getElementById('signup-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const name = document.getElementById('signup-name').value;
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-            
-            authManager.signUp(email, password, name).then(user => {
-                if (user) {
-                    state.isLoggedIn = true;
-                    state.user = user;
-                    localStorage.setItem('user', JSON.stringify(user));
-                    signupModal.classList.remove('active');
-                    updateAuthUI();
-                }
-            });
-        });
-        
-        // Close modals when clicking outside
-        window.addEventListener('click', function(e) {
-            if (e.target === loginModal) {
-                loginModal.classList.remove('active');
-            }
-            if (e.target === signupModal) {
-                signupModal.classList.remove('active');
             }
         });
     }
-
-    // FlashcardManager class
-    function FlashcardManager(vocabularyData, lessonContent) {
-        const flashcardContainer = document.querySelector('.flashcard-container');
-        const categoryBtns = document.querySelectorAll('.category-btn');
-        let currentCategory = 'citizenship';
-        let currentCardIndex = 0;
-        let cards = [];
-        
-        this.init = function() {
-            loadCards();
-            renderCard();
-            attachFlashcardEvents();
-        };
-        
-        this.setLevel = function(level) {
-            // Filter cards based on level
-            loadCards();
-            currentCardIndex = 0;
-            renderCard();
-        };
-        
-        function loadCards() {
-            // Load cards from vocabulary data based on current category and level
-            if (vocabularyData && vocabularyData[currentCategory]) {
-                if (state.level === 'beginner' && vocabularyData[currentCategory].basic) {
-                    cards = vocabularyData[currentCategory].basic;
-                } else if (state.level === 'advanced' && vocabularyData[currentCategory].advanced) {
-                    cards = vocabularyData[currentCategory].advanced;
-                } else {
-                    // Fallback to lesson content
-                    cards = lessonContent[state.level].filter(item => 
-                        item.type === 'vocab' || item.type === 'phrase'
-                    );
-                }
-            } else {
-                // Fallback to lesson content
-                cards = lessonContent[state.level].filter(item => 
-                    item.type === 'vocab' || item.type === 'phrase'
-                );
-            }
-            
-            // Update total cards count
-            document.getElementById('total-cards').textContent = cards.length;
+    
+    // Helper method to shuffle array
+    shuffleArray(array) {
+        const newArray = [...array];
+        for (let i = newArray.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
         }
-        
-        function renderCard() {
-            if (cards.length === 0) {
-                flashcardContainer.innerHTML = '<p>No cards available for this category and level.</p>';
-                return;
-            }
-            
-            const card = cards[currentCardIndex];
-            const cardWord = card.word || card.portuguese;
-            const cardTranslation = card.translation;
-            const cardUsage = card.usage;
-            
-            // Update current card number
-            document.getElementById('current-card').textContent = currentCardIndex + 1;
-            
-            // Update progress bar
-            const progressPercentage = ((currentCardIndex + 1) / cards.length) * 100;
-            document.querySelector('.progress').style.width = `${progressPercentage}%`;
-            
-            // Create flashcard HTML
-            const flashcard = document.querySelector('.flashcard');
-            const flashcardInner = flashcard.querySelector('.flashcard-inner');
-            
-            // Update front of card
-            const frontWord = flashcardInner.querySelector('.word');
-            frontWord.textContent = cardWord;
-            
-            // Update back of card
-            const backTranslation = flashcardInner.querySelector('.translation');
-            backTranslation.textContent = cardTranslation;
-            
-            const backUsage = flashcardInner.querySelector('.usage');
-            if (backUsage) {
-                backUsage.textContent = cardUsage;
-            }
-            
-            // Reset card flip
-            flashcard.classList.remove('flipped');
-            
-            // Update audio button if available
-            const audioBtn = flashcardInner.querySelector('.audio-btn');
-            if (audioBtn) {
-                audioBtn.onclick = function() {
-                    if (card.audio) {
-                        pronunciationTrainer.playAudio(card.audio);
-                    }
-                };
-            }
-        }
-        
-        function attachFlashcardEvents() {
-            // Category selection
-            categoryBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    categoryBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentCategory = this.getAttribute('data-category');
-                    currentCardIndex = 0;
-                    loadCards();
-                    renderCard();
-                });
-            });
-            
-            // Flip card
-            document.getElementById('flip-card').addEventListener('click', function() {
-                const flashcard = document.querySelector('.flashcard');
-                flashcard.classList.toggle('flipped');
-            });
-            
-            // Navigate cards
-            document.getElementById('prev-card').addEventListener('click', function() {
-                if (currentCardIndex > 0) {
-                    currentCardIndex--;
-                    renderCard();
-                }
-            });
-            
-            document.getElementById('next-card').addEventListener('click', function() {
-                if (currentCardIndex < cards.length - 1) {
-                    currentCardIndex++;
-                    renderCard();
-                    
-                    // Track progress
-                    if (state.isLoggedIn) {
-                        progressTracker.updateFlashcardProgress(currentCategory, currentCardIndex);
-                    }
-                }
-            });
-        }
+        return newArray;
     }
-
-    // Start the app
-    init();
-});
-
-// Class definitions for other modules are in their respective files
+    
+    // Add pronunciation exercises
+    addPronunciationExercises() {
+        if (!this.feedbackDisplay) return;
+        
+        const word = this.words[this.currentIndex];
+        if (!word) return;
+        
+        const exercises = [
+            {
+                title: 'Vowel Sounds',
+                description: 'Portuguese has nasal vowels that don\'t exist in English. Practice the nasal sounds in this word.',
+                example: this.highlightNasalVowels(word.word || word.portuguese || '')
+            },
+            {
+                title: 'Stress Pattern',
+                description: 'Pay attention to the stressed syllable in Portuguese words.',
+                example: this.highlightStressedSyllable(word.word || word.portuguese || '')
+            },
+            {
+                title: 'Minimal Pairs',
+                description: 'Practice distinguishing similar sounds.',
+                example: this.getMinimalPairs(word.word || word.portuguese || '')
+            }
+        ];
+        
+        // Only show exercises for words that have them
+        const filteredExercises = exercises.filter(ex => ex.example !== '');
+        
+        if (filteredExercises.length === 0) return;
+        
+        let exercisesHtml = '<div class="pronunciation-exercises"><h4>Pronunciation Exercises</h4>';
+        
+        filteredExercises.forEach(exercise => {
+            exercisesHtml += `
+                <div class="exercise">
+                    <h5>${exercise.title}</h5>
+                    <p>${exercise.description}</p>
+                    <div class="example">${exercise.example}</div>
+                </div>
+            `;
+        });
+        
+        exercisesHtml += '</div>';
+        
+        // Add exercises after feedback
+        const currentContent = this.feedbackDisplay.innerHTML;
+        this.feedbackDisplay.innerHTML = currentContent + exercisesHtml;
+    }
+    
+    // Helper methods for pronunciation exercises
+    highlightNasalVowels(word) {
+        // Highlight nasal vowels (ã, õ, etc.) in the word
+        // This is a simplified version - a real implementation would be more sophisticated
+        const nasalVowels = ['ã', 'õ', 'ẽ', 'ĩ', 'ũ', 'am', 'em', 'im', 'om', 'um', 'an', 'en', 'in', 'on', 'un'];
+        
+        let result = word;
+        nasalVowels.forEach(vowel => {
+            result = result.replace(new RegExp(vowel, 'gi'), `<span class="nasal-vowel">${vowel}</span>`);
+        });
+        
+        return result || '';
+    }
+    
+    highlightStressedSyllable(word) {
+        // This is a simplified approach - a real implementation would use a dictionary or rules
+        // Portuguese stress rules are complex but generally fall on the penultimate syllable
+        
+        if (!word || word.length < 2) return word;
+        
+        // Split into syllables (very simplified)
+        const syllables = this.simpleSyllableSplit(word);
+        
+        if (syllables.length < 2) return word;
+        
+        // Default stress on penultimate syllable
+        let stressIndex = syllables.length - 2;
+        
+        // Words ending in -r, -l, -z, -i, -u or nasal sounds typically stress the last syllable
+        const lastChar = word.charAt(word.length - 1).toLowerCase();
+        if (['r', 'l', 'z', 'i', 'u'].includes(lastChar)) {
+            stressIndex = syllables.length - 1;
+        }
+        
+        // Words with accent marks have explicit stress
+        for (let i = 0; i < syllables.length; i++) {
+            if (/[áàâãéèêíìîóòôõúùû]/i.test(syllables[i])) {
+                stressIndex = i;
+                break;
+            }
+        }
+        
+        // Create result with highlighted syllable
+        return syllables.map((syllable, index) => 
+            index === stressIndex ? 
+                `<span class="stressed-syllable">${syllable}</span>` : 
+                syllable
+        ).join('');
+    }
+    
+    simpleSyllableSplit(word) {
+        // Very simplified syllable splitting - not linguistically accurate
+        // A real implementation would use proper syllabification rules
+        
+        if (!word) return [];
+        
+        const vowels = 'aeiouyáàâãéèêíìîóòôõúùû';
+        let syllables = [];
+        let currentSyllable = '';
+        
+        for (let i = 0; i < word.length; i++) {
+            currentSyllable += word[i];
+            
+            // If current character is a vowel and next character exists and is a consonant
+            if (
+                vowels.includes(word[i].toLowerCase()) && 
+                i + 1 < word.length && 
+                !vowels.includes(word[i + 1].toLowerCase())
+            ) {
+                // And if after that consonant there's another vowel
+                if (i + 2 < word.length && vowels.includes(word[i + 2].toLowerCase())) {
+                    syllables.push(currentSyllable);
+                    currentSyllable = '';
+                }
+            }
+        }
+        
+        // Add the last syllable if there's anything left
+        if (currentSyllable) {
+            syllables.push(currentSyllable);
+        }
+        
+        // If we couldn't split it properly, just return the whole word
+        return syllables.length > 0 ? syllables : [word];
+    }
+    
+    getMinimalPairs(word) {
+        // This would ideally come from a database of minimal pairs
+        // For now, we'll just provide some common examples
+        
+        const commonPairs = {
+            'avô': 'avó (grandfather/grandmother - note the stress difference)',
+            'caro': 'carro (expensive/car - note the rolled R)',
+            'sede': 'sede (thirst/headquarters - note the open vs closed E)',
+            'tu': 'do (you/of the - practice the T vs D sounds)',
+            'pão': 'pau (bread/stick - practice the nasal vs oral vowel)'
+        };
+        
+        return commonPairs[word.toLowerCase()] || '';
+    }
+}
