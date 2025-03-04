@@ -38,15 +38,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const signupForm = document.getElementById('signup-form');
     
     // Initialize modules
-    const authManager = new AuthManager();
-    window.authManager = authManager; // Make it globally accessible
-    
-    // Initialize feature modules
-    let flashcardManager, pronunciationTrainer, quizManager, progressTracker;
+    let authManager, flashcardManager, pronunciationTrainer, quizManager, progressTracker;
     
     // Initialize the app
     function init() {
         console.log('Initializing Portuguese A2 Learning App...');
+        
+        // Initialize Firebase Auth Manager
+        if (typeof AuthManager !== 'undefined') {
+            authManager = new AuthManager();
+            window.authManager = authManager; // Make it globally accessible
+            
+            // Check if user is logged in
+            authManager.onAuthStateChanged(user => {
+                if (user) {
+                    handleUserLoggedIn(user);
+                } else {
+                    handleUserLoggedOut();
+                }
+            });
+        } else {
+            console.warn('AuthManager not found. Authentication features will be disabled.');
+        }
         
         // Apply saved theme
         if (appState.theme === 'dark') {
@@ -57,34 +70,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Initialize feature modules if their elements exist
-        if (document.querySelector('.flashcard')) {
+        // Initialize feature modules if their elements and classes exist
+        if (document.querySelector('.flashcard') && typeof FlashcardManager !== 'undefined') {
             flashcardManager = new FlashcardManager();
             flashcardManager.init();
+            window.flashcardManager = flashcardManager;
         }
         
-        if (document.querySelector('.pronunciation-container')) {
+        if (document.querySelector('.pronunciation-container') && typeof PronunciationTrainer !== 'undefined') {
             pronunciationTrainer = new PronunciationTrainer();
             pronunciationTrainer.init();
+            window.pronunciationTrainer = pronunciationTrainer;
         }
         
-        if (document.querySelector('.quiz-container')) {
+        if (document.querySelector('.quiz-container') && typeof QuizManager !== 'undefined') {
             quizManager = new QuizManager();
             quizManager.init();
+            window.quizManager = quizManager;
         }
         
         // Initialize progress tracker
-        progressTracker = new ProgressTracker();
-        window.progressTracker = progressTracker; // Make it globally accessible
-        
-        // Check if user is logged in
-        authManager.onAuthStateChanged(user => {
-            if (user) {
-                handleUserLoggedIn(user);
-            } else {
-                handleUserLoggedOut();
-            }
-        });
+        if (typeof ProgressTracker !== 'undefined') {
+            progressTracker = new ProgressTracker();
+            window.progressTracker = progressTracker; // Make it globally accessible
+            progressTracker.init(authManager);
+        } else {
+            console.warn('ProgressTracker not found. Progress tracking features will be disabled.');
+        }
         
         // Show initial section based on hash or default
         showSection(appState.currentSection);
@@ -110,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dashboard) dashboard.classList.remove('hidden');
         
         // Initialize progress tracker with auth manager
-        progressTracker.init(authManager);
+        if (progressTracker) progressTracker.init(authManager);
     }
     
     // Handle user logged out state
@@ -124,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dashboard) dashboard.classList.add('hidden');
         
         // Initialize progress tracker without auth (will use localStorage)
-        progressTracker.init(null);
+        if (progressTracker) progressTracker.init(null);
     }
     
     // Show a specific section
@@ -152,8 +164,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update active nav link
             navLinks.forEach(link => {
                 link.classList.remove('active');
-                if (link.getAttribute('data-section') === sectionId || 
-                    link.getAttribute('href') === '#' + sectionId) {
+                const linkSection = link.getAttribute('data-section') || 
+                                   (link.getAttribute('href') ? link.getAttribute('href').substring(1) : '');
+                if (linkSection === sectionId) {
                     link.classList.add('active');
                 }
             });
@@ -226,6 +239,12 @@ document.addEventListener('DOMContentLoaded', function() {
     async function handleLogin(e) {
         e.preventDefault();
         
+        if (!authManager) {
+            console.error('Authentication manager not initialized');
+            alert('Authentication system is not available');
+            return;
+        }
+        
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
         
@@ -236,13 +255,19 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Login error:', error);
             // Show error message to user
-            alert('Login failed: ' + error.message);
+            alert('Login failed: ' + (error.message || 'Unknown error'));
         }
     }
     
     // Handle signup form submission
     async function handleSignup(e) {
         e.preventDefault();
+        
+        if (!authManager) {
+            console.error('Authentication manager not initialized');
+            alert('Authentication system is not available');
+            return;
+        }
         
         const name = document.getElementById('signup-name').value;
         const email = document.getElementById('signup-email').value;
@@ -255,16 +280,22 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Signup error:', error);
             // Show error message to user
-            alert('Signup failed: ' + error.message);
+            alert('Signup failed: ' + (error.message || 'Unknown error'));
         }
     }
     
     // Handle logout
     async function handleLogout() {
+        if (!authManager) {
+            console.error('Authentication manager not initialized');
+            return;
+        }
+        
         try {
             await authManager.signOut();
         } catch (error) {
             console.error('Logout error:', error);
+            alert('Logout failed: ' + (error.message || 'Unknown error'));
         }
     }
     
@@ -275,8 +306,10 @@ document.addEventListener('DOMContentLoaded', function() {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 const section = link.getAttribute('data-section') || 
-                               link.getAttribute('href').substring(1);
-                showSection(section);
+                               (link.getAttribute('href') ? link.getAttribute('href').substring(1) : '');
+                if (section) {
+                    showSection(section);
+                }
             });
         });
         
@@ -303,7 +336,9 @@ document.addEventListener('DOMContentLoaded', function() {
         levelButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const level = btn.getAttribute('data-level');
-                setActiveLevel(level);
+                if (level) {
+                    setActiveLevel(level);
+                }
             });
         });
         
@@ -381,6 +416,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     modal.classList.remove('active');
                 });
             }
+            
+            // Navigation with arrow keys when in flashcard section
+            if (appState.currentSection === 'flashcards' && flashcardManager) {
+                if (e.key === 'ArrowRight') {
+                    flashcardManager.nextCard();
+                } else if (e.key === 'ArrowLeft') {
+                    flashcardManager.prevCard();
+                } else if (e.key === ' ' || e.key === 'Spacebar') {
+                    flashcardManager.flipCard();
+                    e.preventDefault(); // Prevent scrolling with spacebar
+                }
+            }
         });
     }
     
@@ -448,13 +495,19 @@ function getWithExpiry(key) {
     const itemStr = localStorage.getItem(key);
     if (!itemStr) return null;
     
-    const item = JSON.parse(itemStr);
-    const now = new Date();
-    
-    if (now.getTime() > item.expiry) {
+    try {
+        const item = JSON.parse(itemStr);
+        const now = new Date();
+        
+        if (now.getTime() > item.expiry) {
+            localStorage.removeItem(key);
+            return null;
+        }
+        
+        return item.value;
+    } catch (e) {
+        console.error('Error parsing stored item:', e);
         localStorage.removeItem(key);
         return null;
     }
-    
-    return item.value;
 }
