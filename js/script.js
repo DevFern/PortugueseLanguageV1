@@ -1,3 +1,8 @@
+/**
+ * Main script for the Portuguese A2 Learning App
+ * Initializes all components and manages app state
+ */
+
 document.addEventListener('DOMContentLoaded', function() {
   // App state
   const appState = {
@@ -12,10 +17,20 @@ document.addEventListener('DOMContentLoaded', function() {
   const themeToggle = document.getElementById('theme-toggle');
   const getStartedBtn = document.getElementById('get-started-btn');
   const learnMoreBtn = document.getElementById('learn-more-btn');
+  const loginBtn = document.getElementById('login-btn');
+  const signupBtn = document.getElementById('signup-btn');
+  const userProfile = document.getElementById('user-profile');
+  const userName = document.getElementById('user-name');
+  const logoutBtn = document.getElementById('logout-btn');
+  const dashboard = document.getElementById('dashboard');
   
   // Initialize modules
   const authManager = new AuthManager();
   window.authManager = authManager;
+  
+  const dataManager = new DataManager();
+  window.dataManager = dataManager;
+  dataManager.init();
   
   // Initialize other components
   let flashcardManager = null;
@@ -42,12 +57,47 @@ document.addEventListener('DOMContentLoaded', function() {
     // Attach event listeners
     attachEventListeners();
     
+    // Set up auth state listener
+    authManager.onAuthStateChanged(handleAuthStateChanged);
+    
     console.log('App initialized');
   }
   
+  function handleAuthStateChanged(user) {
+    if (user) {
+      // User is signed in
+      console.log('User signed in:', user.email);
+      
+      if (loginBtn) loginBtn.classList.add('hidden');
+      if (signupBtn) signupBtn.classList.add('hidden');
+      if (userProfile) {
+        userProfile.classList.remove('hidden');
+        if (userName) userName.textContent = user.displayName || user.email;
+      }
+      
+      // Show dashboard
+      if (dashboard) dashboard.classList.remove('hidden');
+      
+      // Initialize progress tracker if not already initialized
+      if (!progressTracker && typeof ProgressTracker !== 'undefined') {
+        progressTracker = new ProgressTracker();
+        progressTracker.init(authManager);
+        window.progressTracker = progressTracker;
+      }
+    } else {
+      // User is signed out
+      console.log('User signed out');
+      
+      if (loginBtn) loginBtn.classList.remove('hidden');
+      if (signupBtn) signupBtn.classList.remove('hidden');
+      if (userProfile) userProfile.classList.add('hidden');
+      
+      // Hide dashboard
+      if (dashboard) dashboard.classList.add('hidden');
+    }
+  }
+  
   function showSection(sectionId) {
-    console.log('Showing section:', sectionId);
-    
     // Default to home if section doesn't exist
     if (!document.getElementById(sectionId)) {
       sectionId = 'home';
@@ -106,8 +156,8 @@ document.addEventListener('DOMContentLoaded', function() {
       window.a2TestModule = a2TestModule;
     }
     
-    // Initialize progress tracker
-    if (typeof ProgressTracker !== 'undefined') {
+    // Initialize progress tracker (only if user is logged in)
+    if (typeof ProgressTracker !== 'undefined' && authManager.getCurrentUser()) {
       progressTracker = new ProgressTracker();
       progressTracker.init(authManager);
       window.progressTracker = progressTracker;
@@ -129,117 +179,91 @@ document.addEventListener('DOMContentLoaded', function() {
     // Theme toggle
     if (themeToggle) {
       themeToggle.addEventListener('click', function() {
-        document.body.classList.toggle('dark-theme');
-        const isDark = document.body.classList.contains('dark-theme');
-        
-        // Update icon
-        this.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-        
-        // Save preference
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        if (appState.theme === 'light') {
+          document.body.classList.add('dark-theme');
+          this.innerHTML = '<i class="fas fa-sun"></i>';
+          appState.theme = 'dark';
+        } else {
+          document.body.classList.remove('dark-theme');
+          this.innerHTML = '<i class="fas fa-moon"></i>';
+          appState.theme = 'light';
+        }
+        localStorage.setItem('theme', appState.theme);
       });
     }
     
-    // Get started button
+    // Get Started button
     if (getStartedBtn) {
       getStartedBtn.addEventListener('click', function() {
         showSection('flashcards');
       });
     }
     
-    // Learn more button
+    // Learn More button
     if (learnMoreBtn) {
       learnMoreBtn.addEventListener('click', function() {
         showSection('about');
       });
     }
     
-    // Login/Signup buttons
-    const loginBtn = document.getElementById('login-btn');
-    const signupBtn = document.getElementById('signup-btn');
-    const loginModal = document.getElementById('login-modal');
-    const signupModal = document.getElementById('signup-modal');
-    const closeModalBtns = document.querySelectorAll('.close-modal');
-    const showSignupBtn = document.getElementById('show-signup');
-    const showLoginBtn = document.getElementById('show-login');
-    const userProfileSection = document.getElementById('user-profile');
-    const userNameDisplay = document.getElementById('user-name');
-    const logoutBtn = document.getElementById('logout-btn');
-    
-    // Auth state change listener
-    authManager.onAuthStateChanged(user => {
-      if (user) {
-        // User is signed in
-        if (loginBtn) loginBtn.classList.add('hidden');
-        if (signupBtn) signupBtn.classList.add('hidden');
-        if (userProfileSection) {
-          userProfileSection.classList.remove('hidden');
-          if (userNameDisplay) userNameDisplay.textContent = user.displayName || user.email;
-        }
-        
-        // Show dashboard if it exists
-        const dashboard = document.getElementById('dashboard');
-        if (dashboard) dashboard.classList.remove('hidden');
-      } else {
-        // User is signed out
-        if (loginBtn) loginBtn.classList.remove('hidden');
-        if (signupBtn) signupBtn.classList.remove('hidden');
-        if (userProfileSection) userProfileSection.classList.add('hidden');
-        
-        // Hide dashboard if it exists
-        const dashboard = document.getElementById('dashboard');
-        if (dashboard) dashboard.classList.add('hidden');
-      }
-    });
-    
     // Login button
-    if (loginBtn && loginModal) {
+    if (loginBtn) {
       loginBtn.addEventListener('click', function() {
-        loginModal.style.display = 'block';
+        const loginModal = document.getElementById('login-modal');
+        if (loginModal) {
+          loginModal.classList.remove('hidden');
+          loginModal.style.display = 'block';
+        }
       });
     }
     
     // Signup button
-    if (signupBtn && signupModal) {
+    if (signupBtn) {
       signupBtn.addEventListener('click', function() {
-        signupModal.style.display = 'block';
+        const signupModal = document.getElementById('signup-modal');
+        if (signupModal) {
+          signupModal.classList.remove('hidden');
+          signupModal.style.display = 'block';
+        }
       });
     }
     
     // Close modal buttons
+    const closeModalBtns = document.querySelectorAll('.close-modal');
     if (closeModalBtns) {
       closeModalBtns.forEach(btn => {
         btn.addEventListener('click', function() {
-          if (loginModal) loginModal.style.display = 'none';
-          if (signupModal) signupModal.style.display = 'none';
+          const modal = this.closest('.modal');
+          if (modal) {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+          }
         });
       });
     }
     
-    // Close modals when clicking outside
-    window.addEventListener('click', function(e) {
-      if (loginModal && e.target === loginModal) {
-        loginModal.style.display = 'none';
-      }
-      if (signupModal && e.target === signupModal) {
-        signupModal.style.display = 'none';
-      }
-    });
+    // Modal switch links
+    const showSignupBtn = document.getElementById('show-signup');
+    const showLoginBtn = document.getElementById('show-login');
+    const loginModal = document.getElementById('login-modal');
+    const signupModal = document.getElementById('signup-modal');
     
-    // Show signup from login
     if (showSignupBtn && loginModal && signupModal) {
       showSignupBtn.addEventListener('click', function(e) {
         e.preventDefault();
+        loginModal.classList.add('hidden');
         loginModal.style.display = 'none';
+        signupModal.classList.remove('hidden');
         signupModal.style.display = 'block';
       });
     }
     
-    // Show login from signup
     if (showLoginBtn && loginModal && signupModal) {
       showLoginBtn.addEventListener('click', function(e) {
         e.preventDefault();
+        signupModal.classList.add('hidden');
         signupModal.style.display = 'none';
+        loginModal.classList.remove('hidden');
         loginModal.style.display = 'block';
       });
     }
@@ -265,6 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
           
           // Close modal
           if (loginModal) {
+            loginModal.classList.add('hidden');
             loginModal.style.display = 'none';
           }
           
@@ -292,6 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
           
           // Close modal
           if (signupModal) {
+            signupModal.classList.add('hidden');
             signupModal.style.display = 'none';
           }
           
@@ -303,8 +329,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
     }
+    
+    // Window click to close modals
+    window.addEventListener('click', function(e) {
+      if (e.target.classList.contains('modal')) {
+        e.target.classList.add('hidden');
+        e.target.style.display = 'none';
+      }
+    });
   }
-
+  
   // Initialize the app
   init();
 });
