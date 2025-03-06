@@ -1,0 +1,153 @@
+/* Flashcard styles */
+.flashcard-container {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  height: 300px;
+}
+
+.flashcard {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+  box-shadow: var(--shadow-md);
+  border-radius: var(--border-radius-lg);
+}
+
+.flashcard.flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+}
+
+.flashcard-front {
+  background-color: var(--primary-color);
+  color: white;
+  z-index: 2;
+}
+
+.flashcard-back {
+  background-color: var(--secondary-color);
+  color: white;
+  transform: rotateY(180deg);
+}
+
+.word {
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--spacing-lg);
+}
+
+.translation {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-md);
+}
+
+.usage {
+  font-size: var(--font-size-base);
+  font-style: italic;
+  margin-bottom: var(--spacing-sm);
+}
+
+.english-usage {
+  font-size: var(--font-size-base);
+  opacity: 0.8;
+  margin-bottom: var(--spacing-lg);
+}
+
+.audio-btn {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.audio-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.flashcard-controls {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.flashcard-btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+#flip-card {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+#flip-card:hover {
+  background-color: var(--primary-dark);
+}
+
+#prev-card, #next-card {
+  background-color: var(--light-gray);
+  color: var(--text-color);
+}
+
+#prev-card:hover, #next-card:hover {
+  background-color: var(--text-light);
+  color: white;
+}
+
+.flashcard-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+  font-size: var(--font-size-sm);
+}
+
+.level-selector, .category-selector {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.level-btn, .category-btn {
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--border-radius-full);
+  background-color: var(--light-gray);
+  color: var(--text-color);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.level-btn:hover, .category-btn:hover {
+  background-color: var(--text-light);
+  color: white;
+}
+
+.level-btn.active, .category-btn.active {
+  background-color: var(--primary-color);
+  color: white;
+}
