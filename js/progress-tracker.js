@@ -1,4 +1,3 @@
-// progress-tracker.js - Simplified progress tracking with localStorage
 class ProgressTracker {
   constructor() {
     this.progress = {
@@ -8,9 +7,10 @@ class ProgressTracker {
       quizzes: [],
       lastActivity: null,
       totalLessonsCompleted: 0,
-      streak: 0,
+      streak: 1,
       lastLogin: new Date().toISOString()
     };
+    this.authManager = null;
   }
   
   init(authManager) {
@@ -18,17 +18,52 @@ class ProgressTracker {
     this.loadProgress();
     this.updateProgressUI();
     this.updateStreak();
+    
+    // Set up daily check for streak
+    this.checkDailyStreak();
   }
   
   loadProgress() {
-    // Try to load from localStorage
     const savedProgress = localStorage.getItem('progress');
     if (savedProgress) {
       try {
         this.progress = JSON.parse(savedProgress);
       } catch (e) {
         console.error('Error parsing progress data:', e);
+        // Initialize with default values
+        this.initializeDefaultProgress();
       }
+    } else {
+      // Initialize with default values
+      this.initializeDefaultProgress();
+    }
+  }
+  
+  initializeDefaultProgress() {
+    this.progress = {
+      vocabulary: 0,
+      grammar: 0,
+      listening: 0,
+      quizzes: [],
+      lastActivity: null,
+      totalLessonsCompleted: 0,
+      streak: 1,
+      lastLogin: new Date().toISOString()
+    };
+    this.saveProgress();
+  }
+  
+  saveProgress() {
+    localStorage.setItem('progress', JSON.stringify(this.progress));
+  }
+  
+  checkDailyStreak() {
+    const now = new Date();
+    const lastCheck = localStorage.getItem('lastStreakCheck');
+    
+    if (!lastCheck || new Date(lastCheck).getDate() !== now.getDate()) {
+      this.updateStreak();
+      localStorage.setItem('lastStreakCheck', now.toISOString());
     }
   }
   
@@ -80,6 +115,78 @@ class ProgressTracker {
       const average = this.getQuizAverage();
       quizAverage.textContent = `${average}%`;
     }
+    
+    // Update recent activity
+    this.updateRecentActivity();
+  }
+  
+  updateRecentActivity() {
+    const activityList = document.querySelector('.activity-list');
+    if (!activityList) return;
+    
+    // Clear existing activity items
+    activityList.innerHTML = '';
+    
+    if (!this.progress.quizzes || this.progress.quizzes.length === 0) {
+      activityList.innerHTML = `
+        <div class="empty-activity">
+          <p>No recent activity. Start learning to see your progress!</p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Sort quizzes by date (most recent first)
+    const recentQuizzes = [...this.progress.quizzes]
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5);
+    
+    // Add recent quizzes to activity list
+    recentQuizzes.forEach(quiz => {
+      const date = new Date(quiz.date);
+      const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      
+      const activityItem = document.createElement('div');
+      activityItem.className = 'activity-item';
+      
+      let icon = '';
+      switch(quiz.type) {
+        case 'vocabulary':
+          icon = '<i class="fas fa-book"></i>';
+          break;
+        case 'grammar':
+          icon = '<i class="fas fa-pencil-alt"></i>';
+          break;
+        case 'listening':
+          icon = '<i class="fas fa-headphones"></i>';
+          break;
+        case 'citizenship':
+          icon = '<i class="fas fa-flag"></i>';
+          break;
+        default:
+          icon = '<i class="fas fa-check-circle"></i>';
+      }
+      
+      activityItem.innerHTML = `
+        ${icon}
+        <div class="activity-details">
+          <div class="activity-title">${this.capitalizeFirstLetter(quiz.type)} Quiz (${quiz.level})</div>
+          <div class="activity-time">${formattedDate}</div>
+        </div>
+        <div class="activity-score">${quiz.percentage}%</div>
+      `;
+      
+      activityList.appendChild(activityItem);
+    });
+  }
+  
+  getQuizAverage() {
+    if (!this.progress.quizzes || this.progress.quizzes.length === 0) {
+      return 0;
+    }
+    
+    const sum = this.progress.quizzes.reduce((total, quiz) => total + quiz.percentage, 0);
+    return Math.round(sum / this.progress.quizzes.length);
   }
   
   updateStreak() {
@@ -130,6 +237,36 @@ class ProgressTracker {
     }
   }
   
+  updateGrammarProgress(completed, total) {
+    const newProgress = Math.min(Math.round((completed / total) * 100), 100);
+    
+    if (newProgress > this.progress.grammar) {
+      this.progress.grammar = newProgress;
+      this.progress.lastActivity = {
+        type: 'grammar',
+        date: new Date().toISOString()
+      };
+      this.progress.totalLessonsCompleted += 1;
+      this.saveProgress();
+      this.updateProgressUI();
+    }
+  }
+  
+  updateListeningProgress(completed, total) {
+    const newProgress = Math.min(Math.round((completed / total) * 100), 100);
+    
+    if (newProgress > this.progress.listening) {
+      this.progress.listening = newProgress;
+      this.progress.lastActivity = {
+        type: 'listening',
+        date: new Date().toISOString()
+      };
+      this.progress.totalLessonsCompleted += 1;
+      this.saveProgress();
+      this.updateProgressUI();
+    }
+  }
+  
   saveQuizResult(quizResult) {
     if (!this.progress.quizzes) {
       this.progress.quizzes = [];
@@ -167,16 +304,41 @@ class ProgressTracker {
     this.updateProgressUI();
   }
   
-  saveProgress() {
-    localStorage.setItem('progress', JSON.stringify(this.progress));
+  updateVocabularyFromQuiz(quizResult) {
+    const potentialProgress = Math.min(
+      this.progress.vocabulary + Math.round((quizResult.percentage / 100) * 10),
+      100
+    );
+    
+    if (potentialProgress > this.progress.vocabulary) {
+      this.progress.vocabulary = potentialProgress;
+    }
   }
   
-  getQuizAverage() {
-    if (!this.progress.quizzes || this.progress.quizzes.length === 0) {
-      return 0;
-    }
+  updateGrammarFromQuiz(quizResult) {
+    const potentialProgress = Math.min(
+      this.progress.grammar + Math.round((quizResult.percentage / 100) * 10),
+      100
+    );
     
-    const sum = this.progress.quizzes.reduce((total, quiz) => total + quiz.percentage, 0);
-    return Math.round(sum / this.progress.quizzes.length);
+    if (potentialProgress > this.progress.grammar) {
+      this.progress.grammar = potentialProgress;
+    }
+  }
+  
+  updateListeningFromQuiz(quizResult) {
+    const potentialProgress = Math.min(
+      this.progress.listening + Math.round((quizResult.percentage / 100) * 10),
+      100
+    );
+    
+    if (potentialProgress > this.progress.listening) {
+      this.progress.listening = potentialProgress;
+    }
+  }
+  
+  capitalizeFirstLetter(string) {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
   }
 }
