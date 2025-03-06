@@ -1,3 +1,4 @@
+// flashcards.js - Updated implementation
 class FlashcardManager {
   constructor() {
     this.cards = [];
@@ -9,7 +10,6 @@ class FlashcardManager {
     this.flashcardContainer = document.querySelector('.flashcard-container');
     this.flashcardElement = document.querySelector('.flashcard');
     this.wordElement = document.querySelector('.word');
-    this.phoneticElement = document.querySelector('.phonetic');
     this.translationElement = document.querySelector('.translation');
     this.usageElement = document.querySelector('.usage');
     this.englishUsageElement = document.querySelector('.english-usage');
@@ -20,11 +20,10 @@ class FlashcardManager {
     this.prevButton = document.getElementById('prev-card');
     this.nextButton = document.getElementById('next-card');
     this.flipButton = document.getElementById('flip-card');
-    this.audioButton = document.querySelector('.audio-btn');
     
     // Category and level selectors
     this.categoryButtons = document.querySelectorAll('.category-btn');
-    this.levelButtons = document.querySelectorAll('#flashcards .level-btn');
+    this.levelButtons = document.querySelectorAll('.level-btn');
   }
   
   init() {
@@ -45,33 +44,56 @@ class FlashcardManager {
     this.cards = [];
     
     // Check if vocabulary data exists
-    if (typeof vocabularyData !== 'undefined') {
-      try {
-        // Get level data
-        let levelData;
-        if (this.level === 'beginner') {
-          levelData = 'basic';
-        } else if (this.level === 'intermediate') {
-          levelData = 'intermediate';
-        } else if (this.level === 'advanced') {
-          levelData = 'advanced';
-        } else {
-          levelData = 'basic';
+    if (typeof vocabularyData === 'undefined') {
+      console.warn('Vocabulary data not found, using fallback data');
+      
+      // Use fallback data
+      this.cards = [
+        {
+          word: 'cidadania',
+          translation: 'citizenship',
+          usage: 'Preciso de obter a cidadania portuguesa.',
+          englishUsage: 'I need to obtain Portuguese citizenship.',
+          audio: 'audio/cidadania.mp3'
+        },
+        {
+          word: 'passaporte',
+          translation: 'passport',
+          usage: 'O meu passaporte está válido por mais cinco anos.',
+          englishUsage: 'My passport is valid for five more years.',
+          audio: 'audio/passaporte.mp3'
+        },
+        {
+          word: 'residência',
+          translation: 'residence',
+          usage: 'Tenho autorização de residência em Portugal.',
+          englishUsage: 'I have residence authorization in Portugal.',
+          audio: 'audio/residencia.mp3'
         }
-        
-        // If category is 'all', combine all categories
-        if (this.category === 'all') {
-          Object.keys(vocabularyData).forEach(category => {
-            if (vocabularyData[category] && vocabularyData[category][levelData]) {
-              this.cards = [...this.cards, ...vocabularyData[category][levelData]];
-            }
-          });
-        } else if (vocabularyData[this.category] && vocabularyData[this.category][levelData]) {
-          this.cards = vocabularyData[this.category][levelData];
+      ];
+      
+      return;
+    }
+    
+    // Get cards based on category and level
+    const levelMap = {
+      'beginner': 'basic',
+      'intermediate': 'intermediate',
+      'advanced': 'advanced'
+    };
+    
+    const dataLevel = levelMap[this.level] || 'basic';
+    
+    // Load cards from all categories if category is 'all'
+    if (this.category === 'all') {
+      Object.keys(vocabularyData).forEach(category => {
+        if (vocabularyData[category] && vocabularyData[category][dataLevel]) {
+          this.cards = [...this.cards, ...vocabularyData[category][dataLevel]];
         }
-      } catch (e) {
-        console.error('Error loading vocabulary data:', e);
-      }
+      });
+    } else if (vocabularyData[this.category] && vocabularyData[this.category][dataLevel]) {
+      // Load cards from specific category
+      this.cards = vocabularyData[this.category][dataLevel];
     }
     
     // If no cards found, use fallback data
@@ -98,28 +120,11 @@ class FlashcardManager {
           usage: 'Tenho autorização de residência em Portugal.',
           englishUsage: 'I have residence authorization in Portugal.',
           audio: 'audio/residencia.mp3'
-        },
-        {
-          word: 'obrigado',
-          translation: 'thank you',
-          usage: 'Obrigado pela sua ajuda.',
-          englishUsage: 'Thank you for your help.',
-          audio: 'audio/obrigado.mp3'
-        },
-        {
-          word: 'por favor',
-          translation: 'please',
-          usage: 'Por favor, pode repetir?',
-          englishUsage: 'Please, can you repeat?',
-          audio: 'audio/por-favor.mp3'
         }
       ];
     }
     
-    // Update total cards count
-    if (this.totalCardsElement) {
-      this.totalCardsElement.textContent = this.cards.length;
-    }
+    console.log(`Loaded ${this.cards.length} cards for category: ${this.category}, level: ${this.level}`);
   }
   
   renderCard() {
@@ -135,10 +140,6 @@ class FlashcardManager {
       this.wordElement.textContent = card.word || card.portuguese || '';
     }
     
-    if (this.phoneticElement) {
-      this.phoneticElement.textContent = card.phonetic ? `[${card.phonetic}]` : '';
-    }
-    
     // Update back of card
     if (this.translationElement) {
       this.translationElement.textContent = card.translation || '';
@@ -152,23 +153,34 @@ class FlashcardManager {
       this.englishUsageElement.textContent = card.englishUsage || '';
     }
     
-    // Update card counter
-    if (this.currentCardElement) {
-      this.currentCardElement.textContent = this.currentIndex + 1;
-    }
-    
     // Reset card flip
     if (this.flashcardElement) {
       this.flashcardElement.classList.remove('flipped');
     }
     
-    // Update navigation buttons
-    if (this.prevButton) {
-      this.prevButton.disabled = this.currentIndex === 0;
+    // Update card counter
+    if (this.currentCardElement) {
+      this.currentCardElement.textContent = this.currentIndex + 1;
     }
     
-    if (this.nextButton) {
-      this.nextButton.disabled = this.currentIndex === this.cards.length - 1;
+    if (this.totalCardsElement) {
+      this.totalCardsElement.textContent = this.cards.length;
+    }
+    
+    // Update audio button if available
+    const audioBtn = document.querySelector('.audio-btn');
+    if (audioBtn) {
+      audioBtn.onclick = () => {
+        if (card.audio) {
+          const audio = new Audio(`assets/${card.audio}`);
+          audio.play().catch(error => {
+            console.error('Error playing audio:', error);
+            alert('Audio file not found. Please try another card.');
+          });
+        } else {
+          alert('No audio available for this card.');
+        }
+      };
     }
   }
   
@@ -179,14 +191,10 @@ class FlashcardManager {
         btn.addEventListener('click', () => {
           this.categoryButtons.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-          
-          const category = btn.getAttribute('data-category');
-          if (category) {
-            this.category = category;
-            this.currentIndex = 0;
-            this.loadCards();
-            this.renderCard();
-          }
+          this.category = btn.getAttribute('data-category');
+          this.currentIndex = 0;
+          this.loadCards();
+          this.renderCard();
         });
       });
     }
@@ -197,15 +205,11 @@ class FlashcardManager {
         btn.addEventListener('click', () => {
           this.levelButtons.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-          
-          const level = btn.getAttribute('data-level');
-          if (level) {
-            this.level = level;
-            localStorage.setItem('userLevel', level);
-            this.currentIndex = 0;
-            this.loadCards();
-            this.renderCard();
-          }
+          this.level = btn.getAttribute('data-level');
+          localStorage.setItem('userLevel', this.level);
+          this.currentIndex = 0;
+          this.loadCards();
+          this.renderCard();
         });
       });
     }
@@ -216,13 +220,6 @@ class FlashcardManager {
         if (this.flashcardElement) {
           this.flashcardElement.classList.toggle('flipped');
         }
-      });
-    }
-    
-    // Audio button
-    if (this.audioButton) {
-      this.audioButton.addEventListener('click', () => {
-        alert('Audio files will be available in a future update.');
       });
     }
     
@@ -282,4 +279,25 @@ class FlashcardManager {
     this.loadCards();
     this.renderCard();
   }
+  
+  // Helper method to shuffle array
+  shuffleArray(array) {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  }
 }
+
+// Initialize when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  if (document.querySelector('#flashcards')) {
+    const flashcardManager = new FlashcardManager();
+    flashcardManager.init();
+    
+    // Make it globally accessible
+    window.flashcardManager = flashcardManager;
+  }
+});
