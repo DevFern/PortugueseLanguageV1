@@ -1,65 +1,73 @@
-// config.js - Replace Firebase with localStorage implementation
+// config.js - Client-side configuration
 const appConfig = {
   appName: "Portuguese A2 Learning",
   version: "1.0.0",
   useLocalStorage: true
 };
 
-// LocalStorage-based auth and data management
-class LocalStorageManager {
-  constructor() {
-    this.initialize();
+// Mock Firebase for compatibility with existing code
+const firebase = {
+  initializeApp: function() {
+    console.log('Using localStorage instead of Firebase');
+    return {
+      auth: function() {
+        return {
+          onAuthStateChanged: function(callback) {
+            const userData = localStorage.getItem('user');
+            if (userData) {
+              try {
+                callback(JSON.parse(userData));
+              } catch (e) {
+                console.error('Error parsing user data:', e);
+                callback(null);
+              }
+            } else {
+              callback(null);
+            }
+            return function() {}; // Unsubscribe function
+          },
+          signInWithEmailAndPassword: function(email, password) {
+            return new Promise((resolve) => {
+              const user = {
+                email: email,
+                displayName: email.split('@')[0],
+                uid: 'local-' + Date.now()
+              };
+              localStorage.setItem('user', JSON.stringify(user));
+              resolve({ user });
+            });
+          },
+          createUserWithEmailAndPassword: function(email, password) {
+            return new Promise((resolve) => {
+              const user = {
+                email: email,
+                displayName: email.split('@')[0],
+                uid: 'local-' + Date.now()
+              };
+              localStorage.setItem('user', JSON.stringify(user));
+              resolve({ user });
+            });
+          },
+          signOut: function() {
+            return new Promise((resolve) => {
+              localStorage.removeItem('user');
+              resolve();
+            });
+          }
+        };
+      }
+    };
   }
-  
-  initialize() {
-    // Create default data structure if it doesn't exist
-    if (!localStorage.getItem('userData')) {
-      localStorage.setItem('userData', JSON.stringify({
-        isLoggedIn: false,
-        user: null,
-        progress: {
-          vocabulary: 0,
-          grammar: 0,
-          listening: 0,
-          quizzes: [],
-          lastActivity: null,
-          totalLessonsCompleted: 0,
-          streak: 0,
-          lastLogin: new Date().toISOString()
-        }
-      }));
-    }
-  }
-  
-  getUserData() {
-    return JSON.parse(localStorage.getItem('userData') || '{}');
-  }
-  
-  saveUserData(data) {
-    localStorage.setItem('userData', JSON.stringify(data));
-  }
-  
-  isLoggedIn() {
-    const userData = this.getUserData();
-    return userData.isLoggedIn || false;
-  }
-  
-  getCurrentUser() {
-    const userData = this.getUserData();
-    return userData.isLoggedIn ? userData.user : null;
-  }
-  
-  getProgress() {
-    const userData = this.getUserData();
-    return userData.progress || {};
-  }
-  
-  saveProgress(progress) {
-    const userData = this.getUserData();
-    userData.progress = progress;
-    this.saveUserData(userData);
-  }
-}
+};
 
-// Create global instance
-const storageManager = new LocalStorageManager();
+// Initialize mock Firebase
+const firebaseConfig = {
+  apiKey: "PLACEHOLDER",
+  authDomain: "placeholder.firebaseapp.com",
+  projectId: "placeholder",
+  storageBucket: "placeholder.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:0000000000000000000000"
+};
+
+firebase.initializeApp(firebaseConfig);
