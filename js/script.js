@@ -46,6 +46,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function showSection(sectionId) {
+    console.log('Showing section:', sectionId);
+    
     // Default to home if section doesn't exist
     if (!document.getElementById(sectionId)) {
       sectionId = 'home';
@@ -127,34 +129,182 @@ document.addEventListener('DOMContentLoaded', function() {
     // Theme toggle
     if (themeToggle) {
       themeToggle.addEventListener('click', function() {
-        if (appState.theme === 'light') {
-          document.body.classList.add('dark-theme');
-          this.innerHTML = '<i class="fas fa-sun"></i>';
-          appState.theme = 'dark';
-        } else {
-          document.body.classList.remove('dark-theme');
-          this.innerHTML = '<i class="fas fa-moon"></i>';
-          appState.theme = 'light';
-        }
-        localStorage.setItem('theme', appState.theme);
+        document.body.classList.toggle('dark-theme');
+        const isDark = document.body.classList.contains('dark-theme');
+        
+        // Update icon
+        this.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        
+        // Save preference
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
       });
     }
     
-    // Get Started button
+    // Get started button
     if (getStartedBtn) {
       getStartedBtn.addEventListener('click', function() {
         showSection('flashcards');
       });
     }
     
-    // Learn More button
+    // Learn more button
     if (learnMoreBtn) {
       learnMoreBtn.addEventListener('click', function() {
         showSection('about');
       });
     }
+    
+    // Login/Signup buttons
+    const loginBtn = document.getElementById('login-btn');
+    const signupBtn = document.getElementById('signup-btn');
+    const loginModal = document.getElementById('login-modal');
+    const signupModal = document.getElementById('signup-modal');
+    const closeModalBtns = document.querySelectorAll('.close-modal');
+    const showSignupBtn = document.getElementById('show-signup');
+    const showLoginBtn = document.getElementById('show-login');
+    const userProfileSection = document.getElementById('user-profile');
+    const userNameDisplay = document.getElementById('user-name');
+    const logoutBtn = document.getElementById('logout-btn');
+    
+    // Auth state change listener
+    authManager.onAuthStateChanged(user => {
+      if (user) {
+        // User is signed in
+        if (loginBtn) loginBtn.classList.add('hidden');
+        if (signupBtn) signupBtn.classList.add('hidden');
+        if (userProfileSection) {
+          userProfileSection.classList.remove('hidden');
+          if (userNameDisplay) userNameDisplay.textContent = user.displayName || user.email;
+        }
+        
+        // Show dashboard if it exists
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard) dashboard.classList.remove('hidden');
+      } else {
+        // User is signed out
+        if (loginBtn) loginBtn.classList.remove('hidden');
+        if (signupBtn) signupBtn.classList.remove('hidden');
+        if (userProfileSection) userProfileSection.classList.add('hidden');
+        
+        // Hide dashboard if it exists
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard) dashboard.classList.add('hidden');
+      }
+    });
+    
+    // Login button
+    if (loginBtn && loginModal) {
+      loginBtn.addEventListener('click', function() {
+        loginModal.style.display = 'block';
+      });
+    }
+    
+    // Signup button
+    if (signupBtn && signupModal) {
+      signupBtn.addEventListener('click', function() {
+        signupModal.style.display = 'block';
+      });
+    }
+    
+    // Close modal buttons
+    if (closeModalBtns) {
+      closeModalBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          if (loginModal) loginModal.style.display = 'none';
+          if (signupModal) signupModal.style.display = 'none';
+        });
+      });
+    }
+    
+    // Close modals when clicking outside
+    window.addEventListener('click', function(e) {
+      if (loginModal && e.target === loginModal) {
+        loginModal.style.display = 'none';
+      }
+      if (signupModal && e.target === signupModal) {
+        signupModal.style.display = 'none';
+      }
+    });
+    
+    // Show signup from login
+    if (showSignupBtn && loginModal && signupModal) {
+      showSignupBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        loginModal.style.display = 'none';
+        signupModal.style.display = 'block';
+      });
+    }
+    
+    // Show login from signup
+    if (showLoginBtn && loginModal && signupModal) {
+      showLoginBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        signupModal.style.display = 'none';
+        loginModal.style.display = 'block';
+      });
+    }
+    
+    // Logout button
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', function() {
+        authManager.signOut();
+      });
+    }
+    
+    // Login form submission
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+      loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        
+        try {
+          await authManager.signIn(email, password);
+          
+          // Close modal
+          if (loginModal) {
+            loginModal.style.display = 'none';
+          }
+          
+          // Reset form
+          loginForm.reset();
+        } catch (error) {
+          console.error('Login error:', error);
+          alert('Login failed: ' + error.message);
+        }
+      });
+    }
+    
+    // Signup form submission
+    const signupForm = document.getElementById('signup-form');
+    if (signupForm) {
+      signupForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('signup-name').value;
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+        
+        try {
+          await authManager.signUp(email, password, name);
+          
+          // Close modal
+          if (signupModal) {
+            signupModal.style.display = 'none';
+          }
+          
+          // Reset form
+          signupForm.reset();
+        } catch (error) {
+          console.error('Signup error:', error);
+          alert('Signup failed: ' + error.message);
+        }
+      });
+    }
   }
-  
+
   // Initialize the app
   init();
 });
