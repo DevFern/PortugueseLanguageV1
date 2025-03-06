@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="assets/css/quiz.css">
+    <link rel="stylesheet" href="assets/css/flashcards.css">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -139,203 +140,107 @@
             <div class="activity-list">
                 <!-- Activity items will be added dynamically -->
                 <div class="empty-activity">
-                    <p>No recent activity. Start learning to see your progress!</p>
+                    <p>No recent activity.</p>
                 </div>
             </div>
         </div>
 
+        <!-- Flashcards Section -->
         <section id="flashcards" class="section">
-            <h2>Vocabulary Flashcards</h2>
-            <div class="level-selector">
-                <button class="level-btn active" data-level="beginner">Beginner</button>
-                <button class="level-btn" data-level="intermediate">Intermediate</button>
-                <button class="level-btn" data-level="advanced">Advanced</button>
-            </div>
-            <div class="category-selector">
-                <button class="category-btn" data-category="all">All Categories</button>
-                <button class="category-btn active" data-category="citizenship">Citizenship</button>
-                <button class="category-btn" data-category="daily_life">Daily Life</button>
-                <button class="category-btn" data-category="transportation">Transportation</button>
-                <button class="category-btn" data-category="food">Food & Dining</button>
-            </div>
-            <div class="flashcard-container">
-                <div class="flashcard">
-                    <div class="flashcard-inner">
+            <div class="container">
+                <h2>Flashcards</h2>
+
+                <div class="level-selector">
+                    <button class="level-btn active" data-level="beginner">Beginner</button>
+                    <button class="level-btn" data-level="intermediate">Intermediate</button>
+                    <button class="level-btn" data-level="advanced">Advanced</button>
+                </div>
+
+                <div class="category-selector">
+                    <button class="category-btn active" data-category="citizenship">Citizenship</button>
+                    <button class="category-btn" data-category="greetings">Greetings</button>
+                    <button class="category-btn" data-category="transportation">Transportation</button>
+                    <button class="category-btn" data-category="food">Food</button>
+                    <button class="category-btn" data-category="health">Health</button>
+                    <button class="category-btn" data-category="all">All Categories</button>
+                </div>
+
+                <div class="flashcard-container">
+                    <div class="flashcard">
                         <div class="flashcard-front">
-                            <h3 class="word">cidadania</h3>
-                            <p class="phonetic">[si-da-da-ni-a]</p>
+                            <div class="word">Portuguese Word</div>
+                            <div class="usage">Example usage in Portuguese</div>
+                            <button class="audio-btn"><i class="fas fa-volume-up"></i> Listen</button>
                         </div>
                         <div class="flashcard-back">
-                            <h3 class="translation">citizenship</h3>
-                            <p class="usage">Preciso de obter a cidadania portuguesa.</p>
-                            <p class="english-usage">I need to obtain Portuguese citizenship.</p>
-                            <button class="audio-btn"><i class="fas fa-volume-up"></i> Listen</button>
+                            <div class="translation">English Translation</div>
+                            <div class="english-usage">Example usage in English</div>
                         </div>
                     </div>
                 </div>
+
                 <div class="flashcard-controls">
-                    <button id="prev-card" class="flashcard-btn"><i class="fas fa-arrow-left"></i> Previous</button>
-                    <button id="flip-card" class="flashcard-btn"><i class="fas fa-sync"></i> Flip</button>
-                    <button id="next-card" class="flashcard-btn">Next <i class="fas fa-arrow-right"></i></button>
+                    <button id="prev-card" class="flashcard-btn"><i class="fas fa-chevron-left"></i> Previous</button>
+                    <button id="flip-card" class="flashcard-btn"><i class="fas fa-sync-alt"></i> Flip</button>
+                    <button id="next-card" class="flashcard-btn">Next <i class="fas fa-chevron-right"></i></button>
                 </div>
+
                 <div class="flashcard-progress">
-                    <span class="flashcard-progress-text">Card <span id="current-card">1</span> of <span id="total-cards">10</span></span>
+                    Card <span id="current-card">1</span> of <span id="total-cards">10</span>
                 </div>
             </div>
         </section>
 
-        <section id="pronunciation" class="section">
-            <h2>Pronunciation Practice</h2>
-            <div class="level-selector">
-                <button class="level-btn active" data-level="beginner">Beginner</button>
-                <button class="level-btn" data-level="advanced">Advanced</button>
-            </div>
-            <div class="pronunciation-container">
-                <div class="word-display">
-                    <h3 class="word">cidadania</h3>
-                    <p class="translation">citizenship</p>
-                    <p class="phonetic">[si-da-da-ni-a]</p>
-                </div>
-                <div class="pronunciation-controls">
-                    <button class="play-audio"><i class="fas fa-volume-up"></i> Listen</button>
-                    <button class="record-pronunciation"><i class="fas fa-microphone"></i> Record</button>
-                </div>
-                <div class="audio-wave">
-                    <canvas id="audio-visualizer"></canvas>
-                </div>
-                <div class="feedback-display">
-                    <!-- Feedback will be displayed here -->
-                </div>
-                <div class="pronunciation-navigation">
-                    <button id="prev-word" class="nav-btn"><i class="fas fa-arrow-left"></i> Previous</button>
-                    <button id="next-word" class="nav-btn">Next <i class="fas fa-arrow-right"></i></button>
-                </div>
-            </div>
-        </section>
+        <!-- Other sections would go here -->
 
-        <section id="quiz" class="section">
-            <h2>Practice Quizzes</h2>
-            <div class="quiz-type-selector">
-                <button class="quiz-type-btn active" data-quiz="vocabulary">Vocabulary</button>
-                <button class="quiz-type-btn" data-quiz="listening">Listening</button>
-                <button class="quiz-type-btn" data-quiz="grammar">Grammar</button>
-                <button class="quiz-type-btn" data-quiz="citizenship">Citizenship</button>
+        <!-- Login Modal -->
+        <div id="login-modal" class="modal">
+            <div class="modal-content">
+                <button class="close-modal">&times;</button>
+                <h2>Login</h2>
+                <form id="login-form" class="modal-form">
+                    <div class="form-group">
+                        <label for="login-email" class="form-label">Email</label>
+                        <input type="email" id="login-email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password" class="form-label">Password</label>
+                        <input type="password" id="login-password" class="form-input" required>
+                    </div>
+                    <button type="submit" class="form-submit">Login</button>
+                </form>
+                <div class="form-footer">
+                    <p>Don't have an account? <a href="#" id="show-signup">Sign up</a></p>
+                </div>
             </div>
-            <div class="level-selector">
-                <button class="level-btn active" data-level="beginner">Beginner</button>
-                <button class="level-btn" data-level="advanced">Advanced</button>
-            </div>
-            <div class="quiz-container">
-                <!-- Quiz content will be dynamically generated -->
-            </div>
-        </section>
+        </div>
 
-        <section id="a2test" class="section">
-            <h2>A2 Test Preparation</h2>
-            <div class="test-section-selector">
-                <button class="test-section-btn active" data-section="listening">Listening</button>
-                <button class="test-section-btn" data-section="reading">Reading</button>
-                <button class="test-section-btn" data-section="speaking">Speaking</button>
-                <button class="test-section-btn" data-section="writing">Writing</button>
-                <button class="test-section-btn" data-section="grammar">Grammar</button>
+        <!-- Signup Modal -->
+        <div id="signup-modal" class="modal">
+            <div class="modal-content">
+                <button class="close-modal">&times;</button>
+                <h2>Sign Up</h2>
+                <form id="signup-form" class="modal-form">
+                    <div class="form-group">
+                        <label for="signup-name" class="form-label">Name</label>
+                        <input type="text" id="signup-name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-email" class="form-label">Email</label>
+                        <input type="email" id="signup-email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password" class="form-label">Password</label>
+                        <input type="password" id="signup-password" class="form-input" required>
+                    </div>
+                    <button type="submit" class="form-submit">Sign Up</button>
+                </form>
+                <div class="form-footer">
+                    <p>Already have an account? <a href="#" id="show-login">Login</a></p>
+                </div>
             </div>
-            <div class="test-container">
-                <!-- Test content will be dynamically generated -->
-            </div>
-        </section>
-
-        <section id="about" class="section">
-            <h2>About This App</h2>
-            <div class="about-content">
-                <p>This European Portuguese Learning App is designed specifically for A2 level learners preparing for the Portuguese citizenship exam. It focuses on the vocabulary, grammar, and cultural knowledge needed to pass the A2 CIPLE exam.</p>
-                
-                <h3>Why Learn European Portuguese?</h3>
-                <p>European Portuguese (spoken in Portugal) differs from Brazilian Portuguese in pronunciation, vocabulary, and some grammar aspects. This app focuses specifically on European Portuguese to help those living in or planning to move to Portugal.</p>
-                
-                <h3>A2 Citizenship Requirements</h3>
-                <p>To obtain Portuguese citizenship, applicants typically need to demonstrate A2 level proficiency in Portuguese. This includes basic communication skills in everyday situations, understanding simple texts, and knowledge about Portuguese culture and society.</p>
-                
-                <h3>How to Use This App</h3>
-                <ul>
-                    <li><strong>Flashcards:</strong> Learn vocabulary through interactive flashcards</li>
-                    <li><strong>Pronunciation:</strong> Practice your pronunciation with audio examples</li>
-                    <li><strong>Quizzes:</strong> Test your knowledge with various quiz types</li>
-                    <li><strong>A2 Test:</strong> Prepare for all sections of the official A2 exam</li>
-                    <li><strong>Progress Tracking:</strong> Monitor your learning journey</li>
-                </ul>
-                
-                <h3>Contact</h3>
-                <p>For feedback or questions about this app, please contact us at <a href="mailto:contact@pt-a2-learn.com">contact@pt-a2-learn.com</a>.</p>
-            </div>
-        </section>
+        </div>
     </main>
-
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo">
-                    <img src="assets/images/logo.png" alt="PT-A2 Learn Logo" height="30">
-                    <span>PT-A2 Learn</span>
-                </div>
-                <div class="footer-links">
-                    <a href="#" class="footer-link">Privacy Policy</a>
-                    <a href="#" class="footer-link">Terms of Service</a>
-                    <a href="#" class="footer-link">Contact</a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2025 PT-A2 Learn. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Login Modal -->
-    <div id="login-modal" class="modal">
-        <div class="modal-content">
-            <button class="close-modal">&times;</button>
-            <h2>Login</h2>
-            <form id="login-form" class="modal-form">
-                <div class="form-group">
-                    <label for="login-email" class="form-label">Email</label>
-                    <input type="email" id="login-email" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label for="login-password" class="form-label">Password</label>
-                    <input type="password" id="login-password" class="form-input" required>
-                </div>
-                <button type="submit" class="form-submit">Login</button>
-            </form>
-            <div class="form-footer">
-                <p>Don't have an account? <a href="#" id="show-signup">Sign up</a></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Signup Modal -->
-    <div id="signup-modal" class="modal">
-        <div class="modal-content">
-            <button class="close-modal">&times;</button>
-            <h2>Sign Up</h2>
-            <form id="signup-form" class="modal-form">
-                <div class="form-group">
-                    <label for="signup-name" class="form-label">Name</label>
-                    <input type="text" id="signup-name" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label for="signup-email" class="form-label">Email</label>
-                    <input type="email" id="signup-email" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label for="signup-password" class="form-label">Password</label>
-                    <input type="password" id="signup-password" class="form-input" required>
-                </div>
-                <button type="submit" class="form-submit">Sign Up</button>
-            </form>
-            <div class="form-footer">
-                <p>Already have an account? <a href="#" id="show-login">Login</a></p>
-            </div>
-        </div>
-    </div>
 
     <noscript>
         <div class="noscript-message">
@@ -346,7 +251,7 @@
     <!-- Load data first -->
     <script src="data/vocabulary.js"></script>
     <script src="data/a2-test-prep.js"></script>
-    
+
     <!-- Then load modules -->
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
@@ -356,7 +261,7 @@
     <script src="js/quiz.js"></script>
     <script src="js/a2test.js"></script>
     <script src="js/progress.js"></script>
-    
+
     <!-- Main script last -->
     <script src="js/script.js"></script>
 </body>
