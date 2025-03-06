@@ -10,6 +10,7 @@ class A2TestPreparation {
   }
   
   init() {
+    console.log('Initializing A2TestPreparation');
     this.attachEventListeners();
     this.loadSection(this.currentSection);
   }
@@ -52,6 +53,33 @@ class A2TestPreparation {
     this.showSectionIntro(section, sectionData);
   }
   
+  countQuestions(sectionData) {
+    if (!sectionData || !Array.isArray(sectionData)) return 0;
+    
+    let count = 0;
+    sectionData.forEach(item => {
+      if (item.questions && Array.isArray(item.questions)) {
+        count += item.questions.length;
+      } else {
+        count += 1; // Count the item itself as a question
+      }
+    });
+    
+    return count;
+  }
+  
+  showNoContentMessage() {
+    if (!this.testContainer) return;
+    
+    this.testContainer.innerHTML = `
+      <div class="no-content">
+        <h3>Content Coming Soon</h3>
+        <p>We're working on adding ${this.capitalizeFirstLetter(this.currentSection)} test content.</p>
+        <p>Please check back later or try another section.</p>
+      </div>
+    `;
+  }
+  
   showSectionIntro(section, sectionData) {
     if (!this.testContainer) return;
     
@@ -73,6 +101,18 @@ class A2TestPreparation {
         this.startTest(section);
       });
     }
+  }
+  
+  getSectionDescription(section) {
+    const descriptions = {
+      'listening': 'Test your ability to understand spoken Portuguese. You will hear audio clips and answer questions about what you heard.',
+      'reading': 'Test your ability to read and understand Portuguese texts. You will read passages and answer questions about them.',
+      'speaking': 'Practice your speaking skills with guided prompts. You will be asked to speak about various topics.',
+      'writing': 'Practice your writing skills with guided prompts. You will be asked to write short texts on various topics.',
+      'grammar': 'Test your knowledge of Portuguese grammar rules and structures.'
+    };
+    
+    return descriptions[section] || 'Test your Portuguese language skills.';
   }
   
   startTest(section) {
@@ -155,6 +195,14 @@ class A2TestPreparation {
     if (audioButton) {
       audioButton.addEventListener('click', () => {
         alert('Audio files will be available in a future update.');
+        
+        // Show transcript if available
+        if (question.transcript) {
+          const audioNote = this.testContainer.querySelector('.audio-note');
+          if (audioNote) {
+            audioNote.innerHTML = `<strong>Transcript:</strong> "${question.transcript}"<br><small>Audio files will be available in a future update.</small>`;
+          }
+        }
       });
     }
   }
@@ -243,11 +291,7 @@ class A2TestPreparation {
           <p>${question.prompt}</p>
         </div>
         <div class="writing-area">
-          <textarea class="writing-input" rows="10" placeholder="Write your response here..."></textarea>
-        </div>
-        <div class="example-container">
-          <h4>Example Response:</h4>
-          <p class="example-text">${question.example.replace(/\n/g, '<br>')}</p>
+          <textarea class="writing-input" rows="8" placeholder="Write your response here..."></textarea>
         </div>
         <div class="assessment-criteria">
           <h4>Assessment Criteria:</h4>
@@ -255,11 +299,26 @@ class A2TestPreparation {
             ${question.assessment.map(criterion => `<li>${criterion}</li>`).join('')}
           </ul>
         </div>
-        <button class="next-question-btn">Next Question</button>
+        <div class="writing-controls">
+          <button class="save-btn">Save Response</button>
+          <button class="next-question-btn">Next Question</button>
+        </div>
       </div>
     `;
     
     // Attach event listeners
+    const saveButton = this.testContainer.querySelector('.save-btn');
+    if (saveButton) {
+      saveButton.addEventListener('click', () => {
+        const response = this.testContainer.querySelector('.writing-input').value;
+        if (response.trim()) {
+          alert('Your response has been saved. In a future update, you will be able to receive feedback on your writing.');
+        } else {
+          alert('Please write a response before saving.');
+        }
+      });
+    }
+    
     const nextButton = this.testContainer.querySelector('.next-question-btn');
     if (nextButton) {
       nextButton.addEventListener('click', () => {
@@ -334,27 +393,78 @@ class A2TestPreparation {
   }
   
   checkAnswer(userAnswer, correctAnswer) {
+    const question = this.testData[this.currentSection][this.currentQuestionIndex];
+    
     if (userAnswer === correctAnswer) {
       this.score++;
+      
+      // Show correct answer feedback
+      const selectedLabel = this.testContainer.querySelector(`label[for="option-${userAnswer}"]`);
+      if (selectedLabel) {
+        selectedLabel.parentNode.classList.add('correct');
+      }
+    } else {
+      // Show incorrect answer feedback
+      const selectedLabel = this.testContainer.querySelector(`label[for="option-${userAnswer}"]`);
+      if (selectedLabel) {
+        selectedLabel.parentNode.classList.add('incorrect');
+      }
+      
+      // Highlight correct answer
+      const correctLabel = this.testContainer.querySelector(`label[for="option-${correctAnswer}"]`);
+      if (correctLabel) {
+        correctLabel.parentNode.classList.add('correct');
+      }
     }
     
-    this.currentQuestionIndex++;
-    this.renderQuestion();
+    // Show explanation if available
+    if (question.explanation) {
+      const explanationDiv = document.createElement('div');
+      explanationDiv.className = 'explanation';
+      explanationDiv.innerHTML = `<p><strong>Explanation:</strong> ${question.explanation}</p>`;
+      
+      const optionsContainer = this.testContainer.querySelector('.options-container');
+      if (optionsContainer) {
+        optionsContainer.after(explanationDiv);
+      }
+    }
+    
+    // Disable all options
+    const options = this.testContainer.querySelectorAll('input[name="answer"]');
+    options.forEach(option => {
+      option.disabled = true;
+    });
+    
+    // Change submit button to next button
+    const submitButton = this.testContainer.querySelector('.submit-answer-btn');
+    if (submitButton) {
+      submitButton.textContent = 'Next Question';
+      submitButton.classList.add('next-question-btn');
+      submitButton.onclick = () => {
+        this.currentQuestionIndex++;
+        this.renderQuestion();
+      };
+    }
   }
   
   showResults() {
-    if (!this.testContainer) return;
-    
     const percentage = Math.round((this.score / this.totalQuestions) * 100);
-    let resultClass = 'average';
-    let message = 'Good effort!';
     
-    if (percentage >= 80) {
+    let resultClass = '';
+    let message = '';
+    
+    if (percentage >= 90) {
       resultClass = 'excellent';
-      message = 'Excellent work!';
-    } else if (percentage < 50) {
-      resultClass = 'needs-improvement';
-      message = 'Keep practicing!';
+      message = 'Excellent! You have a great understanding of Portuguese!';
+    } else if (percentage >= 70) {
+      resultClass = 'good';
+      message = 'Good job! You\'re making good progress!';
+    } else if (percentage >= 50) {
+      resultClass = 'average';
+      message = 'Not bad! Keep practicing to improve your score.';
+    } else {
+      resultClass = 'poor';
+      message = 'Keep studying! You\'ll get better with practice.';
     }
     
     this.testContainer.innerHTML = `
@@ -369,17 +479,15 @@ class A2TestPreparation {
         <p>You scored ${this.score} out of ${this.totalQuestions} questions correctly.</p>
         <div class="result-actions">
           <button class="retry-btn">Try Again</button>
-          <button class="new-test-btn">Try Another Section</button>
+          <button class="new-test-btn">Choose Another Test</button>
         </div>
       </div>
     `;
     
-    // Attach event listeners to buttons
+    // Add event listeners to buttons
     const retryButton = this.testContainer.querySelector('.retry-btn');
     if (retryButton) {
       retryButton.addEventListener('click', () => {
-        this.currentQuestionIndex = 0;
-        this.score = 0;
         this.startTest(this.currentSection);
       });
     }
@@ -394,8 +502,7 @@ class A2TestPreparation {
     // Save test result if progress tracker exists
     if (window.progressTracker) {
       const testResult = {
-        type: 'a2test',
-        section: this.currentSection,
+        type: this.currentSection,
         score: this.score,
         total: this.totalQuestions,
         percentage: percentage,
@@ -406,45 +513,8 @@ class A2TestPreparation {
     }
   }
   
-  showNoContentMessage() {
-    if (!this.testContainer) return;
-    
-    this.testContainer.innerHTML = `
-      <div class="no-content-message">
-        <h3>Content Coming Soon</h3>
-        <p>The ${this.capitalizeFirstLetter(this.currentSection)} section is currently under development.</p>
-        <p>Please check back later or try another section.</p>
-      </div>
-    `;
-  }
-  
-  // Helper methods
   capitalizeFirstLetter(string) {
+    if (!string) return '';
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
-  
-  getSectionDescription(section) {
-    const descriptions = {
-      listening: 'This section tests your ability to understand spoken European Portuguese in everyday situations.',
-      reading: 'This section tests your ability to read and understand written European Portuguese texts.',
-      speaking: 'This section tests your ability to communicate in spoken European Portuguese.',
-      writing: 'This section tests your ability to write in European Portuguese.',
-      grammar: 'This section tests your knowledge of European Portuguese grammar rules.'
-    };
-    
-    return descriptions[section] || 'This section tests your knowledge of European Portuguese.';
-  }
-  
-  countQuestions(sectionData) {
-    return Array.isArray(sectionData) ? sectionData.length : 0;
-  }
 }
-
-// Initialize when the DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-  if (document.querySelector('#a2test')) {
-    const a2TestModule = new A2TestPreparation();
-    a2TestModule.init();
-    window.a2TestModule = a2TestModule;
-  }
-});
