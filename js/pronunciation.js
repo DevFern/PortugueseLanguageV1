@@ -1,6 +1,6 @@
 /**
  * Pronunciation Trainer for Portuguese A2 Learning App
- * Simplified version without audio recording dependencies
+ * Includes playback and recording buttons with placeholders for future functionality
  */
 
 class PronunciationTrainer {
@@ -19,9 +19,13 @@ class PronunciationTrainer {
     this.feedbackDisplay = document.querySelector('.feedback-display');
     this.prevButton = document.getElementById('prev-word');
     this.nextButton = document.getElementById('next-word');
+    this.audioVisualizer = document.getElementById('audio-visualizer');
     
     // Level selectors
     this.levelButtons = document.querySelectorAll('#pronunciation .level-btn');
+    
+    // Recording state
+    this.isRecording = false;
   }
   
   init() {
@@ -29,6 +33,7 @@ class PronunciationTrainer {
     this.loadWords();
     this.renderWord();
     this.attachEventListeners();
+    this.initializeAudioVisualizer();
   }
   
   loadWords() {
@@ -73,7 +78,8 @@ class PronunciationTrainer {
           phonetic: 'si-da-da-ni-a',
           usage: 'Preciso de obter a cidadania portuguesa.',
           englishUsage: 'I need to obtain Portuguese citizenship.',
-          audio: 'audio/cidadania.mp3'
+          audio: 'audio/cidadania.mp3',
+          pronunciationGuide: 'The "ci" is pronounced like "see", and the stress is on the "da" syllable.'
         },
         {
           word: 'passaporte',
@@ -81,7 +87,8 @@ class PronunciationTrainer {
           phonetic: 'pa-sa-por-te',
           usage: 'O meu passaporte está válido por mais cinco anos.',
           englishUsage: 'My passport is valid for five more years.',
-          audio: 'audio/passaporte.mp3'
+          audio: 'audio/passaporte.mp3',
+          pronunciationGuide: 'The "ss" is pronounced like "s" in "see", and the stress is on the "por" syllable.'
         },
         {
           word: 'residência',
@@ -89,7 +96,8 @@ class PronunciationTrainer {
           phonetic: 're-zi-den-si-a',
           usage: 'Tenho autorização de residência em Portugal.',
           englishUsage: 'I have residence authorization in Portugal.',
-          audio: 'audio/residencia.mp3'
+          audio: 'audio/residencia.mp3',
+          pronunciationGuide: 'The "r" is slightly rolled, and the stress is on the "den" syllable.'
         },
         {
           word: 'obrigado',
@@ -97,7 +105,8 @@ class PronunciationTrainer {
           phonetic: 'o-bri-ga-do',
           usage: 'Obrigado pela sua ajuda.',
           englishUsage: 'Thank you for your help.',
-          audio: 'audio/obrigado.mp3'
+          audio: 'audio/obrigado.mp3',
+          pronunciationGuide: 'The "r" is pronounced like "h" in English, and the stress is on the "ga" syllable.'
         },
         {
           word: 'por favor',
@@ -105,7 +114,26 @@ class PronunciationTrainer {
           phonetic: 'por fa-vor',
           usage: 'Por favor, pode repetir?',
           englishUsage: 'Please, can you repeat?',
-          audio: 'audio/por-favor.mp3'
+          audio: 'audio/por-favor.mp3',
+          pronunciationGuide: 'The "r" at the end of "favor" is almost silent, and the stress is on the "vor" syllable.'
+        },
+        {
+          word: 'bom dia',
+          translation: 'good morning',
+          phonetic: 'bom di-a',
+          usage: 'Bom dia, como está?',
+          englishUsage: 'Good morning, how are you?',
+          audio: 'audio/bom-dia.mp3',
+          pronunciationGuide: 'The "om" in "bom" is nasalized, similar to the French nasal vowels.'
+        },
+        {
+          word: 'boa tarde',
+          translation: 'good afternoon',
+          phonetic: 'bo-a tar-de',
+          usage: 'Boa tarde, tudo bem?',
+          englishUsage: 'Good afternoon, all good?',
+          audio: 'audio/boa-tarde.mp3',
+          pronunciationGuide: 'The "r" in "tarde" is pronounced like "h" in English.'
         }
       ];
     }
@@ -141,7 +169,13 @@ class PronunciationTrainer {
     
     // Reset feedback display
     if (this.feedbackDisplay) {
-      this.feedbackDisplay.innerHTML = 'Listen to the pronunciation and practice saying the word. <br><small>Audio files will be available in a future update.</small>';
+      // Include pronunciation guide if available
+      const guide = word.pronunciationGuide || this.generatePronunciationGuide(word.word || word.portuguese);
+      this.feedbackDisplay.innerHTML = `
+        <p>Listen to the pronunciation and practice saying the word.</p>
+        <p><strong>Pronunciation Guide:</strong> ${guide}</p>
+        <p><small>Recording functionality will be available in a future update. For now, practice saying the word out loud.</small></p>
+      `;
     }
     
     // Update navigation buttons
@@ -152,6 +186,41 @@ class PronunciationTrainer {
     if (this.nextButton) {
       this.nextButton.disabled = this.currentIndex === this.words.length - 1;
     }
+    
+    // Reset recording state
+    this.isRecording = false;
+    if (this.recordButton) {
+      this.recordButton.classList.remove('recording');
+      this.recordButton.innerHTML = '<i class="fas fa-microphone"></i> Record';
+    }
+  }
+  
+  initializeAudioVisualizer() {
+    if (!this.audioVisualizer) return;
+    
+    const canvas = this.audioVisualizer;
+    const ctx = canvas.getContext('2d');
+    
+    // Set canvas dimensions
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    
+    // Draw placeholder visualization
+    ctx.fillStyle = '#f0f0f0';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw some placeholder waveform
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height / 2);
+    
+    for (let x = 0; x < canvas.width; x++) {
+      const y = (Math.sin(x * 0.05) * canvas.height / 4) + (canvas.height / 2);
+      ctx.lineTo(x, y);
+    }
+    
+    ctx.strokeStyle = '#ccc';
+    ctx.lineWidth = 2;
+    ctx.stroke();
   }
   
   generateSimplePhonetic(word) {
@@ -183,6 +252,37 @@ class PronunciationTrainer {
     return result;
   }
   
+  generatePronunciationGuide(word) {
+    if (!word) return '';
+    
+    // Common Portuguese pronunciation patterns
+    const patterns = {
+      'ão': 'pronounced as a nasal "ow" sound',
+      'nh': 'similar to "ny" in "canyon"',
+      'lh': 'similar to "lli" in "million"',
+      'rr': 'a strong guttural sound, like "h" in English',
+      'r': 'at the beginning of words, pronounced like "h" in English',
+      'e': 'at the end of words, pronounced like "i" in "bit"',
+      'o': 'at the end of words, pronounced like "oo" in "book" but shorter',
+      'ç': 'pronounced like "s" in "see"',
+      'ch': 'pronounced like "sh" in "shoe"'
+    };
+    
+    // Check for patterns in the word
+    let foundPatterns = [];
+    for (const [pattern, pronunciation] of Object.entries(patterns)) {
+      if (word.includes(pattern)) {
+        foundPatterns.push(`The "${pattern}" is ${pronunciation}.`);
+      }
+    }
+    
+    if (foundPatterns.length > 0) {
+      return foundPatterns.join(' ');
+    } else {
+      return 'Pronounce each letter clearly, with emphasis on the stressed syllable.';
+    }
+  }
+  
   attachEventListeners() {
     // Play audio button
     if (this.playButton) {
@@ -191,11 +291,19 @@ class PronunciationTrainer {
         if (currentWord && currentWord.audio) {
           // For now, just show a message since we don't have audio files
           if (this.feedbackDisplay) {
-            this.feedbackDisplay.innerHTML = 'Audio files will be available in a future update. <br><small>Practice saying the word out loud.</small>';
+            this.feedbackDisplay.innerHTML = `
+              <p>Audio files will be available in a future update.</p>
+              <p><strong>Pronunciation Guide:</strong> ${currentWord.pronunciationGuide || this.generatePronunciationGuide(currentWord.word || currentWord.portuguese)}</p>
+              <p><small>For now, practice saying the word out loud.</small></p>
+            `;
           }
         } else {
           if (this.feedbackDisplay) {
-            this.feedbackDisplay.innerHTML = 'No audio available for this word. <br><small>Practice saying the word out loud.</small>';
+            this.feedbackDisplay.innerHTML = `
+              <p>No audio available for this word.</p>
+              <p><strong>Pronunciation Guide:</strong> ${currentWord.pronunciationGuide || this.generatePronunciationGuide(currentWord.word || currentWord.portuguese)}</p>
+              <p><small>For now, practice saying the word out loud.</small></p>
+            `;
           }
         }
       });
@@ -204,9 +312,32 @@ class PronunciationTrainer {
     // Record button
     if (this.recordButton) {
       this.recordButton.addEventListener('click', () => {
-        // For now, just show a message
-        if (this.feedbackDisplay) {
-          this.feedbackDisplay.innerHTML = 'Recording functionality will be available in a future update. <br><small>For now, practice saying the word out loud.</small>';
+        if (this.isRecording) {
+          // Stop recording
+          this.isRecording = false;
+          this.recordButton.classList.remove('recording');
+          this.recordButton.innerHTML = '<i class="fas fa-microphone"></i> Record';
+          
+          if (this.feedbackDisplay) {
+            this.feedbackDisplay.innerHTML = `
+              <p>Recording functionality will be available in a future update.</p>
+              <p><strong>Pronunciation Guide:</strong> ${this.words[this.currentIndex].pronunciationGuide || this.generatePronunciationGuide(this.words[this.currentIndex].word || this.words[this.currentIndex].portuguese)}</p>
+              <p><small>For now, practice saying the word out loud.</small></p>
+            `;
+          }
+        } else {
+          // Start recording
+          this.isRecording = true;
+          this.recordButton.classList.add('recording');
+          this.recordButton.innerHTML = '<i class="fas fa-stop"></i> Stop';
+          
+          if (this.feedbackDisplay) {
+            this.feedbackDisplay.innerHTML = `
+              <p>Recording functionality will be available in a future update.</p>
+              <p><strong>Pronunciation Guide:</strong> ${this.words[this.currentIndex].pronunciationGuide || this.generatePronunciationGuide(this.words[this.currentIndex].word || this.words[this.currentIndex].portuguese)}</p>
+              <p><small>For now, practice saying the word out loud.</small></p>
+            `;
+          }
         }
       });
     }
@@ -292,23 +423,4 @@ class PronunciationTrainer {
     }
     return newArray;
   }
-  
-  // Placeholder for future audio playback
-  playAudio(audioSrc) {
-    console.log(`Would play audio: ${audioSrc}`);
-    if (this.feedbackDisplay) {
-      this.feedbackDisplay.innerHTML = 'Audio files will be available in a future update. <br><small>Practice saying the word out loud.</small>';
-    }
-  }
 }
-
-// Initialize when the DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-  if (document.querySelector('#pronunciation')) {
-    const pronunciationTrainer = new PronunciationTrainer();
-    pronunciationTrainer.init();
-    
-    // Make it globally accessible
-    window.pronunciationTrainer = pronunciationTrainer;
-  }
-});
