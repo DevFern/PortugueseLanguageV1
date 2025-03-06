@@ -90,7 +90,7 @@ class A2TestPreparation {
       <div class="section-intro">
         <h3>${sectionTitle} Test</h3>
         <p>${description}</p>
-        <p>This test contains ${this.totalQuestions} questions.</p>
+        <p>This test contains ${this.totalQuestions} questions or exercises.</p>
         <button class="start-test-btn">Start Test</button>
       </div>
     `;
@@ -158,7 +158,7 @@ class A2TestPreparation {
   renderListeningQuestion(question) {
     this.testContainer.innerHTML = `
       <div class="question-container">
-        <h3>Question ${this.currentQuestionIndex + 1} of ${this.totalQuestions}</h3>
+        <h3>Question ${this.currentQuestionIndex + 1} of ${this.testData[this.currentSection].length}</h3>
         <div class="audio-player">
           <button class="play-audio-btn"><i class="fas fa-play"></i> Play Audio</button>
           <p class="audio-note">Note: Audio files will be available in a future update.</p>
@@ -210,7 +210,7 @@ class A2TestPreparation {
   renderReadingQuestion(question) {
     this.testContainer.innerHTML = `
       <div class="question-container">
-        <h3>Question ${this.currentQuestionIndex + 1} of ${this.totalQuestions}</h3>
+        <h3>Question ${this.currentQuestionIndex + 1} of ${this.testData[this.currentSection].length}</h3>
         <div class="reading-text">${question.text}</div>
         <div class="question-text">${question.question}</div>
         <div class="options-container">
@@ -243,7 +243,7 @@ class A2TestPreparation {
   renderSpeakingQuestion(question) {
     this.testContainer.innerHTML = `
       <div class="question-container">
-        <h3>Speaking Practice</h3>
+        <h3>Speaking Practice ${this.currentQuestionIndex + 1} of ${this.testData[this.currentSection].length}</h3>
         <div class="speaking-prompt">
           <h4>${question.title}</h4>
           <p>${question.prompt}</p>
@@ -285,13 +285,19 @@ class A2TestPreparation {
   renderWritingQuestion(question) {
     this.testContainer.innerHTML = `
       <div class="question-container">
-        <h3>Writing Practice</h3>
+        <h3>Writing Practice ${this.currentQuestionIndex + 1} of ${this.testData[this.currentSection].length}</h3>
         <div class="writing-prompt">
           <h4>${question.title}</h4>
           <p>${question.prompt}</p>
+          <p><strong>Word limit:</strong> ${question.wordLimit}</p>
         </div>
         <div class="writing-area">
           <textarea class="writing-input" rows="8" placeholder="Write your response here..."></textarea>
+          <div class="word-count">Words: 0</div>
+        </div>
+        <div class="example-container">
+          <h4>Example Response:</h4>
+          <p class="example-text">${question.example}</p>
         </div>
         <div class="assessment-criteria">
           <h4>Assessment Criteria:</h4>
@@ -305,6 +311,17 @@ class A2TestPreparation {
         </div>
       </div>
     `;
+    
+    // Word count functionality
+    const textarea = this.testContainer.querySelector('.writing-input');
+    const wordCount = this.testContainer.querySelector('.word-count');
+    
+    if (textarea && wordCount) {
+      textarea.addEventListener('input', () => {
+        const words = textarea.value.trim().split(/\s+/).filter(word => word.length > 0);
+        wordCount.textContent = `Words: ${words.length}`;
+      });
+    }
     
     // Attach event listeners
     const saveButton = this.testContainer.querySelector('.save-btn');
@@ -331,39 +348,131 @@ class A2TestPreparation {
   renderGrammarQuestion(question) {
     this.testContainer.innerHTML = `
       <div class="question-container">
-        <h3>Question ${this.currentQuestionIndex + 1} of ${this.totalQuestions}</h3>
-        <div class="question-text">${question.question}</div>
-        <div class="options-container">
-          ${question.options.map((option, index) => `
-            <div class="option">
-              <input type="radio" id="option-${index}" name="answer" value="${index}">
-              <label for="option-${index}">${option}</label>
-            </div>
-          `).join('')}
+        <h3>Grammar: ${question.topic}</h3>
+        <div class="grammar-explanation">
+          <p>${question.explanation}</p>
+          <div class="grammar-examples">
+            <h4>Examples:</h4>
+            <ul>
+              ${question.examples.map(example => `<li>${example}</li>`).join('')}
+            </ul>
+          </div>
         </div>
-        <button class="submit-answer-btn">Submit Answer</button>
+        <div class="grammar-questions">
+          <h4>Practice Questions:</h4>
+          <div class="question-progress">Question 1 of ${question.questions.length}</div>
+          <div class="current-question">
+            <p class="question-text">${question.questions[0].question}</p>
+            <div class="options-container">
+              ${question.questions[0].options.map((option, index) => `
+                <div class="option">
+                  <input type="radio" id="option-${index}" name="answer" value="${index}">
+                  <label for="option-${index}">${option}</label>
+                </div>
+              `).join('')}
+            </div>
+            <button class="submit-grammar-btn">Submit Answer</button>
+          </div>
+        </div>
       </div>
     `;
     
-    // Attach event listeners
-    const submitButton = this.testContainer.querySelector('.submit-answer-btn');
-    if (submitButton) {
-      submitButton.addEventListener('click', () => {
-        const selectedOption = this.testContainer.querySelector('input[name="answer"]:checked');
-        if (selectedOption) {
-          const answer = parseInt(selectedOption.value);
-          this.checkAnswer(answer, question.correct);
-        } else {
-          alert('Please select an answer');
+    // Track current grammar question
+    let currentGrammarQuestionIndex = 0;
+    
+    // Function to check grammar answer and move to next question
+    const checkGrammarAnswer = () => {
+      const selectedOption = this.testContainer.querySelector('input[name="answer"]:checked');
+      if (!selectedOption) {
+        alert('Please select an answer');
+        return;
+      }
+      
+      const answer = parseInt(selectedOption.value);
+      const currentQuestion = question.questions[currentGrammarQuestionIndex];
+      
+      // Check if answer is correct
+      const isCorrect = answer === currentQuestion.correct;
+      
+      // Show feedback
+      const options = this.testContainer.querySelectorAll('.option');
+      options.forEach((option, index) => {
+        const input = option.querySelector('input');
+        input.disabled = true;
+        
+        if (index === currentQuestion.correct) {
+          option.classList.add('correct');
+        } else if (index === answer && !isCorrect) {
+          option.classList.add('incorrect');
         }
       });
+      
+      // Update score if correct
+      if (isCorrect) {
+        this.score++;
+      }
+      
+      // Change button to "Next" or "Finish" based on remaining questions
+      const submitButton = this.testContainer.querySelector('.submit-grammar-btn');
+      if (submitButton) {
+        if (currentGrammarQuestionIndex < question.questions.length - 1) {
+          submitButton.textContent = 'Next Question';
+          submitButton.onclick = () => {
+            currentGrammarQuestionIndex++;
+            updateGrammarQuestion();
+          };
+        } else {
+          submitButton.textContent = 'Finish Grammar Section';
+          submitButton.onclick = () => {
+            this.currentQuestionIndex++;
+            this.renderQuestion();
+          };
+        }
+      }
+    };
+    
+    // Function to update the current grammar question
+    const updateGrammarQuestion = () => {
+      const currentQuestion = question.questions[currentGrammarQuestionIndex];
+      const questionProgress = this.testContainer.querySelector('.question-progress');
+      const questionText = this.testContainer.querySelector('.question-text');
+      const optionsContainer = this.testContainer.querySelector('.options-container');
+      const submitButton = this.testContainer.querySelector('.submit-grammar-btn');
+      
+      if (questionProgress) {
+        questionProgress.textContent = `Question ${currentGrammarQuestionIndex + 1} of ${question.questions.length}`;
+      }
+      
+      if (questionText) {
+        questionText.textContent = currentQuestion.question;
+      }
+      
+      if (optionsContainer) {
+        optionsContainer.innerHTML = currentQuestion.options.map((option, index) => `
+          <div class="option">
+            <input type="radio" id="option-${index}" name="answer" value="${index}">
+            <label for="option-${index}">${option}</label>
+          </div>
+        `).join('');
+      }
+      
+      if (submitButton) {
+        submitButton.textContent = 'Submit Answer';
+        submitButton.onclick = checkGrammarAnswer;
+      }
+    };
+    
+    // Attach event listener to submit button
+    const submitButton = this.testContainer.querySelector('.submit-grammar-btn');
+    if (submitButton) {
+      submitButton.addEventListener('click', checkGrammarAnswer);
     }
   }
   
   renderDefaultQuestion(question) {
     this.testContainer.innerHTML = `
       <div class="question-container">
-        <h3>Question ${this.currentQuestionIndex + 1} of ${this.totalQuestions}</h3>
+        <h3>Question ${this.currentQuestionIndex + 1} of ${this.testData[this.currentSection].length}</h3>
         <div class="question-text">${question.question}</div>
         <div class="options-container">
           ${question.options.map((option, index) => `
@@ -518,3 +627,14 @@ class A2TestPreparation {
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
 }
+
+// Initialize when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  if (document.querySelector('#a2test')) {
+    const a2TestModule = new A2TestPreparation();
+    a2TestModule.init();
+    
+    // Make it globally accessible
+    window.a2TestModule = a2TestModule;
+  }
+});
