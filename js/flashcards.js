@@ -7,11 +7,15 @@ class FlashcardManager {
     this.isFlipped = false;
     this.searchTerm = '';
     this.showingFavorites = false;
-    this.favorites = [];
+    this.favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
     
     // DOM elements
     this.flashcardContainer = document.querySelector('.flashcard-container');
     this.flashcard = document.querySelector('.flashcard');
+    this.flashcardInner = document.querySelector('.flashcard-inner');
+    this.flashcardFront = document.querySelector('.flashcard-front');
+    this.flashcardBack = document.querySelector('.flashcard-back');
+    this.favoriteBtn = document.querySelector('.favorite-btn');
     this.prevButton = document.getElementById('prev-card');
     this.nextButton = document.getElementById('next-card');
     this.flipButton = document.getElementById('flip-card');
@@ -19,6 +23,8 @@ class FlashcardManager {
     this.totalCardsElement = document.getElementById('total-cards');
     this.categoryButtons = document.querySelectorAll('.category-btn');
     this.levelButtons = document.querySelectorAll('#flashcards .level-btn');
+    this.searchInput = document.getElementById('flashcard-search');
+    this.favoritesToggle = document.getElementById('favorites-toggle');
   }
   
   init() {
@@ -30,7 +36,7 @@ class FlashcardManager {
   }
   
   loadFlashcards() {
-    // Reset current index
+    // Reset current index and flip state
     this.currentIndex = 0;
     this.isFlipped = false;
     
@@ -122,10 +128,11 @@ class FlashcardManager {
     
     // Apply search filter if there's a search term
     if (this.searchTerm) {
+      const searchLower = this.searchTerm.toLowerCase();
       filteredWords = filteredWords.filter(word => {
         const portuguese = (word.word || word.portuguese || '').toLowerCase();
         const english = (word.translation || '').toLowerCase();
-        return portuguese.includes(this.searchTerm) || english.includes(this.searchTerm);
+        return portuguese.includes(searchLower) || english.includes(searchLower);
       });
     }
     
@@ -141,87 +148,57 @@ class FlashcardManager {
   }
   
   renderFlashcard() {
+    if (!this.flashcardContainer || !this.flashcard) {
+      console.error('Flashcard container or flashcard element not found');
+      return;
+    }
+    
     if (this.flashcards.length === 0) {
       // No flashcards available
-      if (this.flashcard) {
-        this.flashcard.innerHTML = `
-          <div class="flashcard-inner">
-            <div class="flashcard-front">
-              <h3 class="no-results">No flashcards found</h3>
-              <p>Try changing your filters or search term</p>
-            </div>
-          </div>
-        `;
-      }
-      
-      // Update counter
-      if (this.currentCardElement) this.currentCardElement.textContent = '0';
-      if (this.totalCardsElement) this.totalCardsElement.textContent = '0';
-      
-      // Disable navigation buttons
-      if (this.prevButton) this.prevButton.disabled = true;
-      if (this.nextButton) this.nextButton.disabled = true;
-      if (this.flipButton) this.flipButton.disabled = true;
-      
+      this.renderEmptyState();
       return;
     }
     
     // Get current word
     this.currentWord = this.flashcards[this.currentIndex];
     
-    // Update flashcard content
-    if (this.flashcard) {
-      // Create favorite button
-      const favoriteBtn = document.createElement('button');
-      favoriteBtn.className = 'favorite-btn';
-      favoriteBtn.innerHTML = '<i class="far fa-star"></i>';
-      
-      // Create flashcard inner structure
-      const flashcardInner = document.createElement('div');
-      flashcardInner.className = 'flashcard-inner';
-      
-      if (this.isFlipped) {
-        flashcardInner.classList.add('flipped');
-      }
-      
-      // Front side
-      const frontSide = document.createElement('div');
-      frontSide.className = 'flashcard-front';
-      frontSide.innerHTML = `
+    // Reset flip state when changing cards
+    if (this.flashcardInner) {
+      this.flashcardInner.classList.remove('flipped');
+      this.isFlipped = false;
+    }
+    
+    // Update front side content
+    if (this.flashcardFront) {
+      this.flashcardFront.innerHTML = `
         <h3 class="word">${this.currentWord.word || this.currentWord.portuguese || ''}</h3>
         <p class="phonetic">${this.currentWord.phonetic || ''}</p>
       `;
-      
-      // Back side
-      const backSide = document.createElement('div');
-      backSide.className = 'flashcard-back';
-      backSide.innerHTML = `
+    }
+    
+    // Update back side content
+    if (this.flashcardBack) {
+      this.flashcardBack.innerHTML = `
         <h3 class="translation">${this.currentWord.translation || ''}</h3>
         <p class="usage">${this.currentWord.usage || ''}</p>
         <p class="english-usage">${this.currentWord.english_usage || ''}</p>
-        <button class="play-audio-btn"><i class="fas fa-volume-up"></i> Listen</button>
+        <button class="play-audio-btn" aria-label="Listen to pronunciation">
+          <i class="fas fa-volume-up"></i> Listen
+        </button>
       `;
       
-      // Assemble flashcard
-      flashcardInner.appendChild(frontSide);
-      flashcardInner.appendChild(backSide);
-      
-      // Clear and update flashcard
-      this.flashcard.innerHTML = '';
-      this.flashcard.appendChild(favoriteBtn);
-      this.flashcard.appendChild(flashcardInner);
-      
       // Add audio button functionality
-      const audioButton = this.flashcard.querySelector('.play-audio-btn');
+      const audioButton = this.flashcardBack.querySelector('.play-audio-btn');
       if (audioButton) {
-        audioButton.addEventListener('click', () => {
+        audioButton.addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent card from flipping
           this.playAudio(this.currentWord.word || this.currentWord.portuguese);
         });
       }
-      
-      // Update favorite button
-      this.updateFavoriteButton();
     }
+    
+    // Update favorite button
+    this.updateFavoriteButton();
     
     // Update counter
     if (this.currentCardElement) this.currentCardElement.textContent = (this.currentIndex + 1).toString();
@@ -230,6 +207,7 @@ class FlashcardManager {
     // Update button states
     if (this.prevButton) this.prevButton.disabled = this.currentIndex === 0;
     if (this.nextButton) this.nextButton.disabled = this.currentIndex === this.flashcards.length - 1;
+    if (this.flipButton) this.flipButton.disabled = false;
     
     // Track progress if progress tracker exists
     if (window.progressTracker) {
@@ -241,23 +219,57 @@ class FlashcardManager {
     }
   }
   
+  renderEmptyState() {
+    if (this.flashcardInner) {
+      this.flashcardInner.innerHTML = `
+        <div class="flashcard-front empty-state">
+          <h3 class="no-results">No flashcards found</h3>
+          <p>Try changing your filters or search term</p>
+        </div>
+      `;
+    }
+    
+    // Update counter
+    if (this.currentCardElement) this.currentCardElement.textContent = '0';
+    if (this.totalCardsElement) this.totalCardsElement.textContent = '0';
+    
+    // Disable navigation buttons
+    if (this.prevButton) this.prevButton.disabled = true;
+    if (this.nextButton) this.nextButton.disabled = true;
+    if (this.flipButton) this.flipButton.disabled = true;
+    
+    // Hide favorite button
+    if (this.favoriteBtn) {
+      this.favoriteBtn.style.display = 'none';
+    }
+  }
+  
   flipCard() {
+    if (!this.flashcardInner) return;
+    
     this.isFlipped = !this.isFlipped;
     
-    const flashcardInner = this.flashcard.querySelector('.flashcard-inner');
-    if (flashcardInner) {
-      if (this.isFlipped) {
-        flashcardInner.classList.add('flipped');
-      } else {
-        flashcardInner.classList.remove('flipped');
-      }
+    if (this.isFlipped) {
+      this.flashcardInner.classList.add('flipped');
+    } else {
+      this.flashcardInner.classList.remove('flipped');
     }
+    
+    // Announce to screen readers
+    const announcement = document.createElement('div');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.classList.add('sr-only');
+    announcement.textContent = this.isFlipped ? 'Card flipped to show translation' : 'Card flipped to show word';
+    document.body.appendChild(announcement);
+    
+    setTimeout(() => {
+      document.body.removeChild(announcement);
+    }, 1000);
   }
   
   nextCard() {
     if (this.currentIndex < this.flashcards.length - 1) {
       this.currentIndex++;
-      this.isFlipped = false;
       this.renderFlashcard();
     }
   }
@@ -265,7 +277,6 @@ class FlashcardManager {
   prevCard() {
     if (this.currentIndex > 0) {
       this.currentIndex--;
-      this.isFlipped = false;
       this.renderFlashcard();
     }
   }
@@ -282,21 +293,24 @@ class FlashcardManager {
   attachEventListeners() {
     // Flip button
     if (this.flipButton) {
-      this.flipButton.addEventListener('click', () => {
+      this.flipButton.addEventListener('click', (e) => {
+        e.preventDefault();
         this.flipCard();
       });
     }
     
     // Next button
     if (this.nextButton) {
-      this.nextButton.addEventListener('click', () => {
+      this.nextButton.addEventListener('click', (e) => {
+        e.preventDefault();
         this.nextCard();
       });
     }
     
     // Previous button
     if (this.prevButton) {
-      this.prevButton.addEventListener('click', () => {
+      this.prevButton.addEventListener('click', (e) => {
+        e.preventDefault();
         this.prevCard();
       });
     }
@@ -339,10 +353,15 @@ class FlashcardManager {
       if (document.querySelector('#flashcards.active')) {
         if (e.key === 'ArrowLeft') {
           this.prevCard();
+          e.preventDefault();
         } else if (e.key === 'ArrowRight') {
           this.nextCard();
+          e.preventDefault();
         } else if (e.key === ' ' || e.key === 'Enter') {
-          this.flipCard();
+          if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
+            this.flipCard();
+            e.preventDefault();
+          }
         }
       }
     });
@@ -359,17 +378,16 @@ class FlashcardManager {
   }
   
   initSearch() {
-    const searchInput = document.getElementById('flashcard-search');
-    if (searchInput) {
-      searchInput.addEventListener('input', () => {
-        this.searchTerm = searchInput.value.trim().toLowerCase();
+    if (this.searchInput) {
+      this.searchInput.addEventListener('input', () => {
+        this.searchTerm = this.searchInput.value.trim().toLowerCase();
         this.loadFlashcards();
       });
       
       // Clear search on Escape key
-      searchInput.addEventListener('keydown', (e) => {
+      this.searchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-          searchInput.value = '';
+          this.searchInput.value = '';
           this.searchTerm = '';
           this.loadFlashcards();
         }
@@ -378,21 +396,17 @@ class FlashcardManager {
   }
   
   initFavorites() {
-    this.favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    
-    // Favorites toggle button
-    const favoritesToggle = document.getElementById('favorites-toggle');
-    if (favoritesToggle) {
-      favoritesToggle.addEventListener('click', () => {
+    if (this.favoritesToggle) {
+      this.favoritesToggle.addEventListener('click', () => {
         this.showingFavorites = !this.showingFavorites;
         
         // Update button appearance
         if (this.showingFavorites) {
-          favoritesToggle.innerHTML = '<i class="fas fa-star"></i> All Words';
-          favoritesToggle.classList.add('active');
+          this.favoritesToggle.innerHTML = '<i class="fas fa-star"></i> All Words';
+          this.favoritesToggle.classList.add('active');
         } else {
-          favoritesToggle.innerHTML = '<i class="far fa-star"></i> Favorites';
-          favoritesToggle.classList.remove('active');
+          this.favoritesToggle.innerHTML = '<i class="far fa-star"></i> Favorites';
+          this.favoritesToggle.classList.remove('active');
         }
         
         // Reload cards with filter
@@ -402,22 +416,26 @@ class FlashcardManager {
   }
   
   updateFavoriteButton() {
-    const favoriteBtn = this.flashcard.querySelector('.favorite-btn');
-    if (!favoriteBtn || !this.currentWord) return;
+    if (!this.favoriteBtn || !this.currentWord) return;
+    
+    // Make sure favorite button is visible
+    this.favoriteBtn.style.display = 'block';
     
     const wordKey = this.currentWord.word || this.currentWord.portuguese;
     const isFavorite = this.favorites.some(fav => fav.word === wordKey);
     
     if (isFavorite) {
-      favoriteBtn.innerHTML = '<i class="fas fa-star"></i>';
-      favoriteBtn.classList.add('active');
+      this.favoriteBtn.innerHTML = '<i class="fas fa-star"></i>';
+      this.favoriteBtn.classList.add('active');
+      this.favoriteBtn.setAttribute('aria-label', 'Remove from favorites');
     } else {
-      favoriteBtn.innerHTML = '<i class="far fa-star"></i>';
-      favoriteBtn.classList.remove('active');
+      this.favoriteBtn.innerHTML = '<i class="far fa-star"></i>';
+      this.favoriteBtn.classList.remove('active');
+      this.favoriteBtn.setAttribute('aria-label', 'Add to favorites');
     }
     
     // Add click event
-    favoriteBtn.onclick = (e) => {
+    this.favoriteBtn.onclick = (e) => {
       e.stopPropagation(); // Prevent card from flipping
       this.toggleFavorite();
     };
