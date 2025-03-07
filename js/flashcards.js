@@ -1,92 +1,307 @@
 class FlashcardManager {
   constructor() {
-    this.cards = [];
-    this.allCards = []; // Store all cards for filtering
+    this.flashcards = [];
     this.currentIndex = 0;
-    this.category = 'all';
-    this.level = localStorage.getItem('userLevel') || 'beginner';
-    this.favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    this.currentCategory = 'citizenship';
+    this.currentLevel = localStorage.getItem('userLevel') || 'beginner';
+    this.isFlipped = false;
+    this.searchTerm = '';
     this.showingFavorites = false;
+    this.favorites = [];
     
     // DOM elements
-    this.flashcardElement = document.querySelector('.flashcard');
-    this.flipButton = document.querySelector('.flip-btn');
-    this.nextButton = document.getElementById('next-card');
+    this.flashcardContainer = document.querySelector('.flashcard-container');
+    this.flashcard = document.querySelector('.flashcard');
     this.prevButton = document.getElementById('prev-card');
+    this.nextButton = document.getElementById('next-card');
+    this.flipButton = document.getElementById('flip-card');
+    this.currentCardElement = document.getElementById('current-card');
+    this.totalCardsElement = document.getElementById('total-cards');
     this.categoryButtons = document.querySelectorAll('.category-btn');
     this.levelButtons = document.querySelectorAll('#flashcards .level-btn');
-    this.progressElement = document.querySelector('.flashcard-progress');
-    this.searchInput = null;
-    this.favoritesBtn = null;
   }
   
   init() {
     console.log('Initializing FlashcardManager');
-    
-    // Add search and favorites UI
-    this.addSearchAndFavoritesUI();
-    
-    // Load cards based on initial category and level
-    this.loadCards();
-    
-    // Attach event listeners
+    this.loadFlashcards();
     this.attachEventListeners();
+    this.initSearch();
+    this.initFavorites();
   }
   
-  addSearchAndFavoritesUI() {
-    // Create search container
-    const searchContainer = document.createElement('div');
-    searchContainer.className = 'search-container';
-    searchContainer.innerHTML = `
-      <input type="text" id="flashcard-search" placeholder="Search words...">
-      <button id="show-favorites" class="toggle-btn">
-        <i class="far fa-star"></i> Favorites
-      </button>
-    `;
+  loadFlashcards() {
+    // Reset current index
+    this.currentIndex = 0;
+    this.isFlipped = false;
     
-    // Add to DOM before flashcard container
-    const container = document.querySelector('.flashcard-container');
-    if (container && container.parentNode) {
-      container.parentNode.insertBefore(searchContainer, container);
+    // Try to use vocabulary data if available
+    if (typeof vocabularyData !== 'undefined') {
+      try {
+        // Get words based on category and level
+        let words = [];
+        
+        if (this.currentCategory === 'all') {
+          // Get words from all categories
+          Object.keys(vocabularyData).forEach(category => {
+            if (vocabularyData[category]) {
+              let levelData;
+              
+              if (this.currentLevel === 'beginner' && vocabularyData[category].basic) {
+                levelData = vocabularyData[category].basic;
+              } else if (this.currentLevel === 'intermediate' && vocabularyData[category].intermediate) {
+                levelData = vocabularyData[category].intermediate;
+              } else if (this.currentLevel === 'advanced' && vocabularyData[category].advanced) {
+                levelData = vocabularyData[category].advanced;
+              }
+              
+              if (levelData && Array.isArray(levelData)) {
+                words = [...words, ...levelData];
+              }
+            }
+          });
+        } else if (vocabularyData[this.currentCategory]) {
+          // Get words from specific category
+          let levelData;
+          
+          if (this.currentLevel === 'beginner' && vocabularyData[this.currentCategory].basic) {
+            levelData = vocabularyData[this.currentCategory].basic;
+          } else if (this.currentLevel === 'intermediate' && vocabularyData[this.currentCategory].intermediate) {
+            levelData = vocabularyData[this.currentCategory].intermediate;
+          } else if (this.currentLevel === 'advanced' && vocabularyData[this.currentCategory].advanced) {
+            levelData = vocabularyData[this.currentCategory].advanced;
+          }
+          
+          if (levelData && Array.isArray(levelData)) {
+            words = levelData;
+          }
+        }
+        
+        // Apply filters (search and favorites)
+        words = this.filterWords(words);
+        
+        if (words.length > 0) {
+          this.flashcards = words;
+          this.renderFlashcard();
+          return;
+        }
+      } catch (e) {
+        console.error('Error loading vocabulary data:', e);
+      }
     }
     
-    // Store references
-    this.searchInput = document.querySelector('#flashcard-search');
-    this.favoritesBtn = document.querySelector('#show-favorites');
+    // Fallback if no data available
+    this.flashcards = [
+      {
+        word: 'cidadania',
+        translation: 'citizenship',
+        phonetic: '[si-da-da-ni-a]',
+        usage: 'Preciso de obter a cidadania portuguesa.',
+        english_usage: 'I need to obtain Portuguese citizenship.'
+      },
+      {
+        word: 'passaporte',
+        translation: 'passport',
+        phonetic: '[pa-sa-por-te]',
+        usage: 'O meu passaporte é válido por dez anos.',
+        english_usage: 'My passport is valid for ten years.'
+      },
+      {
+        word: 'residência',
+        translation: 'residence',
+        phonetic: '[re-zi-den-si-a]',
+        usage: 'Tenho autorização de residência permanente.',
+        english_usage: 'I have permanent residence authorization.'
+      }
+    ];
+    
+    this.renderFlashcard();
+  }
+  
+  filterWords(words) {
+    let filteredWords = [...words];
+    
+    // Apply search filter if there's a search term
+    if (this.searchTerm) {
+      filteredWords = filteredWords.filter(word => {
+        const portuguese = (word.word || word.portuguese || '').toLowerCase();
+        const english = (word.translation || '').toLowerCase();
+        return portuguese.includes(this.searchTerm) || english.includes(this.searchTerm);
+      });
+    }
+    
+    // Apply favorites filter if showing favorites
+    if (this.showingFavorites) {
+      const favoriteWords = this.favorites.map(fav => fav.word);
+      filteredWords = filteredWords.filter(word => 
+        favoriteWords.includes(word.word) || favoriteWords.includes(word.portuguese)
+      );
+    }
+    
+    return filteredWords;
+  }
+  
+  renderFlashcard() {
+    if (this.flashcards.length === 0) {
+      // No flashcards available
+      if (this.flashcard) {
+        this.flashcard.innerHTML = `
+          <div class="flashcard-inner">
+            <div class="flashcard-front">
+              <h3 class="no-results">No flashcards found</h3>
+              <p>Try changing your filters or search term</p>
+            </div>
+          </div>
+        `;
+      }
+      
+      // Update counter
+      if (this.currentCardElement) this.currentCardElement.textContent = '0';
+      if (this.totalCardsElement) this.totalCardsElement.textContent = '0';
+      
+      // Disable navigation buttons
+      if (this.prevButton) this.prevButton.disabled = true;
+      if (this.nextButton) this.nextButton.disabled = true;
+      if (this.flipButton) this.flipButton.disabled = true;
+      
+      return;
+    }
+    
+    // Get current word
+    this.currentWord = this.flashcards[this.currentIndex];
+    
+    // Update flashcard content
+    if (this.flashcard) {
+      // Create favorite button
+      const favoriteBtn = document.createElement('button');
+      favoriteBtn.className = 'favorite-btn';
+      favoriteBtn.innerHTML = '<i class="far fa-star"></i>';
+      
+      // Create flashcard inner structure
+      const flashcardInner = document.createElement('div');
+      flashcardInner.className = 'flashcard-inner';
+      
+      if (this.isFlipped) {
+        flashcardInner.classList.add('flipped');
+      }
+      
+      // Front side
+      const frontSide = document.createElement('div');
+      frontSide.className = 'flashcard-front';
+      frontSide.innerHTML = `
+        <h3 class="word">${this.currentWord.word || this.currentWord.portuguese || ''}</h3>
+        <p class="phonetic">${this.currentWord.phonetic || ''}</p>
+      `;
+      
+      // Back side
+      const backSide = document.createElement('div');
+      backSide.className = 'flashcard-back';
+      backSide.innerHTML = `
+        <h3 class="translation">${this.currentWord.translation || ''}</h3>
+        <p class="usage">${this.currentWord.usage || ''}</p>
+        <p class="english-usage">${this.currentWord.english_usage || ''}</p>
+        <button class="play-audio-btn"><i class="fas fa-volume-up"></i> Listen</button>
+      `;
+      
+      // Assemble flashcard
+      flashcardInner.appendChild(frontSide);
+      flashcardInner.appendChild(backSide);
+      
+      // Clear and update flashcard
+      this.flashcard.innerHTML = '';
+      this.flashcard.appendChild(favoriteBtn);
+      this.flashcard.appendChild(flashcardInner);
+      
+      // Add audio button functionality
+      const audioButton = this.flashcard.querySelector('.play-audio-btn');
+      if (audioButton) {
+        audioButton.addEventListener('click', () => {
+          this.playAudio(this.currentWord.word || this.currentWord.portuguese);
+        });
+      }
+      
+      // Update favorite button
+      this.updateFavoriteButton();
+    }
+    
+    // Update counter
+    if (this.currentCardElement) this.currentCardElement.textContent = (this.currentIndex + 1).toString();
+    if (this.totalCardsElement) this.totalCardsElement.textContent = this.flashcards.length.toString();
+    
+    // Update button states
+    if (this.prevButton) this.prevButton.disabled = this.currentIndex === 0;
+    if (this.nextButton) this.nextButton.disabled = this.currentIndex === this.flashcards.length - 1;
+    
+    // Track progress if progress tracker exists
+    if (window.progressTracker) {
+      window.progressTracker.updateFlashcardProgress(
+        this.currentCategory,
+        this.currentIndex + 1,
+        this.flashcards.length
+      );
+    }
+  }
+  
+  flipCard() {
+    this.isFlipped = !this.isFlipped;
+    
+    const flashcardInner = this.flashcard.querySelector('.flashcard-inner');
+    if (flashcardInner) {
+      if (this.isFlipped) {
+        flashcardInner.classList.add('flipped');
+      } else {
+        flashcardInner.classList.remove('flipped');
+      }
+    }
+  }
+  
+  nextCard() {
+    if (this.currentIndex < this.flashcards.length - 1) {
+      this.currentIndex++;
+      this.isFlipped = false;
+      this.renderFlashcard();
+    }
+  }
+  
+  prevCard() {
+    if (this.currentIndex > 0) {
+      this.currentIndex--;
+      this.isFlipped = false;
+      this.renderFlashcard();
+    }
+  }
+  
+  playAudio(word) {
+    // This is a placeholder for audio functionality
+    // In a real implementation, you would load and play the audio file
+    console.log(`Playing audio for: ${word}`);
+    
+    // For now, just show a message
+    alert(`Audio for "${word}" will be available in a future update.`);
   }
   
   attachEventListeners() {
-    // Flip card
+    // Flip button
     if (this.flipButton) {
       this.flipButton.addEventListener('click', () => {
         this.flipCard();
       });
     }
     
-    // Click on card to flip
-    if (this.flashcardElement) {
-      this.flashcardElement.addEventListener('click', (e) => {
-        // Don't flip if clicking on favorite button
-        if (e.target.closest('.favorite-btn')) return;
-        this.flipCard();
-      });
-    }
-    
-    // Next card
+    // Next button
     if (this.nextButton) {
       this.nextButton.addEventListener('click', () => {
         this.nextCard();
       });
     }
     
-    // Previous card
+    // Previous button
     if (this.prevButton) {
       this.prevButton.addEventListener('click', () => {
         this.prevCard();
       });
     }
     
-    // Category selection
+    // Category buttons
     if (this.categoryButtons) {
       this.categoryButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -95,14 +310,14 @@ class FlashcardManager {
           
           const category = btn.getAttribute('data-category');
           if (category) {
-            this.category = category;
-            this.loadCards();
+            this.currentCategory = category;
+            this.loadFlashcards();
           }
         });
       });
     }
     
-    // Level selection
+    // Level buttons
     if (this.levelButtons) {
       this.levelButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -111,330 +326,130 @@ class FlashcardManager {
           
           const level = btn.getAttribute('data-level');
           if (level) {
-            this.level = level;
+            this.currentLevel = level;
             localStorage.setItem('userLevel', level);
-            this.loadCards();
+            this.loadFlashcards();
           }
         });
       });
     }
     
-    // Search functionality
-    if (this.searchInput) {
-      this.searchInput.addEventListener('input', () => {
-        this.filterCards(this.searchInput.value);
-      });
-    }
-    
-    // Favorites toggle
-    if (this.favoritesBtn) {
-      this.favoritesBtn.addEventListener('click', () => {
-        this.toggleFavorites();
-      });
-    }
-    
-    // Keyboard navigation
+    // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       if (document.querySelector('#flashcards.active')) {
-        if (e.key === 'ArrowRight') this.nextCard();
-        if (e.key === 'ArrowLeft') this.prevCard();
-        if (e.key === ' ' || e.key === 'Enter') this.flipCard();
+        if (e.key === 'ArrowLeft') {
+          this.prevCard();
+        } else if (e.key === 'ArrowRight') {
+          this.nextCard();
+        } else if (e.key === ' ' || e.key === 'Enter') {
+          this.flipCard();
+        }
       }
     });
+    
+    // Click on flashcard to flip
+    if (this.flashcard) {
+      this.flashcard.addEventListener('click', (e) => {
+        // Don't flip if clicking on a button
+        if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
+          this.flipCard();
+        }
+      });
+    }
   }
   
-  loadCards() {
-    this.currentIndex = 0;
-    this.cards = [];
+  initSearch() {
+    const searchInput = document.getElementById('flashcard-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        this.searchTerm = searchInput.value.trim().toLowerCase();
+        this.loadFlashcards();
+      });
+      
+      // Clear search on Escape key
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          searchInput.value = '';
+          this.searchTerm = '';
+          this.loadFlashcards();
+        }
+      });
+    }
+  }
+  
+  initFavorites() {
+    this.favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
     
-    // Try to use vocabulary data if available
-    if (typeof vocabularyData !== 'undefined') {
-      try {
-        if (this.category === 'all') {
-          // Load cards from all categories
-          Object.keys(vocabularyData).forEach(category => {
-            this.addCardsFromCategory(category);
-          });
+    // Favorites toggle button
+    const favoritesToggle = document.getElementById('favorites-toggle');
+    if (favoritesToggle) {
+      favoritesToggle.addEventListener('click', () => {
+        this.showingFavorites = !this.showingFavorites;
+        
+        // Update button appearance
+        if (this.showingFavorites) {
+          favoritesToggle.innerHTML = '<i class="fas fa-star"></i> All Words';
+          favoritesToggle.classList.add('active');
         } else {
-          // Load cards from specific category
-          this.addCardsFromCategory(this.category);
+          favoritesToggle.innerHTML = '<i class="far fa-star"></i> Favorites';
+          favoritesToggle.classList.remove('active');
         }
-      } catch (e) {
-        console.error('Error loading vocabulary data:', e);
-      }
-    }
-    
-    // If no cards loaded, use fallback
-    if (this.cards.length === 0) {
-      this.cards = [
-        {
-          word: 'cidadania',
-          translation: 'citizenship',
-          example: 'Eu quero obter a cidadania portuguesa.',
-          audio: 'audio/cidadania.mp3'
-        },
-        {
-          word: 'passaporte',
-          translation: 'passport',
-          example: 'Preciso renovar o meu passaporte.',
-          audio: 'audio/passaporte.mp3'
-        },
-        {
-          word: 'residência',
-          translation: 'residence',
-          example: 'A minha residência é em Lisboa.',
-          audio: 'audio/residencia.mp3'
-        }
-      ];
-    }
-    
-    // Store all cards for filtering
-    this.allCards = [...this.cards];
-    
-    // Render first card
-    this.renderCard();
-  }
-  
-  addCardsFromCategory(category) {
-    if (vocabularyData[category]) {
-      let levelData;
-      
-      if (this.level === 'beginner' && vocabularyData[category].basic) {
-        levelData = vocabularyData[category].basic;
-      } else if (this.level === 'intermediate' && vocabularyData[category].intermediate) {
-        levelData = vocabularyData[category].intermediate;
-      } else if (this.level === 'advanced' && vocabularyData[category].advanced) {
-        levelData = vocabularyData[category].advanced;
-      }
-      
-      if (levelData && Array.isArray(levelData)) {
-        this.cards = [...this.cards, ...levelData];
-      }
-    }
-  }
-  
-  renderCard() {
-    if (!this.flashcardElement || this.cards.length === 0) {
-      return;
-    }
-    
-    // Reset card flip state
-    this.flashcardElement.classList.remove('flipped');
-    
-    const card = this.cards[this.currentIndex];
-    
-    // Check if this card is a favorite
-    const isFavorite = this.favorites.includes(card.word);
-    const favoriteClass = isFavorite ? 'fas fa-star' : 'far fa-star';
-    
-    // Update card content
-    this.flashcardElement.innerHTML = `
-      <div class="flashcard-inner">
-        <div class="flashcard-front">
-          <button class="favorite-btn">
-            <i class="${favoriteClass}"></i>
-          </button>
-          <h3>${card.word}</h3>
-          <button class="play-audio-btn">
-            <i class="fas fa-volume-up"></i>
-          </button>
-        </div>
-        <div class="flashcard-back">
-          <h3>${card.translation}</h3>
-          <p class="example">${card.example || ''}</p>
-        </div>
-      </div>
-    `;
-    
-    // Update progress indicator
-    if (this.progressElement) {
-      this.progressElement.textContent = `${this.currentIndex + 1} / ${this.cards.length}`;
-    }
-    
-    // Add event listener to favorite button
-    const favoriteBtn = this.flashcardElement.querySelector('.favorite-btn');
-    if (favoriteBtn) {
-      favoriteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.toggleFavorite(this.currentIndex);
+        
+        // Reload cards with filter
+        this.loadFlashcards();
       });
     }
-    
-    // Add event listener to audio button
-    const audioBtn = this.flashcardElement.querySelector('.play-audio-btn');
-    if (audioBtn) {
-      audioBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.playAudio(card.audio);
-      });
-    }
-    
-    // Track progress if progress tracker exists
-    if (window.progressTracker) {
-      window.progressTracker.updateFlashcardProgress(this.category, this.currentIndex, this.cards.length);
-    }
   }
   
-  flipCard() {
-    if (this.flashcardElement) {
-      this.flashcardElement.classList.toggle('flipped');
-      
-      // Track progress when card is flipped
-      if (window.progressTracker && this.flashcardElement.classList.contains('flipped')) {
-        window.progressTracker.updateFlashcardProgress(this.category, this.currentIndex, this.cards.length);
-      }
-    }
-  }
-  
-  nextCard() {
-    if (this.currentIndex < this.cards.length - 1) {
-      this.currentIndex++;
-      this.renderCard();
+  updateFavoriteButton() {
+    const favoriteBtn = this.flashcard.querySelector('.favorite-btn');
+    if (!favoriteBtn || !this.currentWord) return;
+    
+    const wordKey = this.currentWord.word || this.currentWord.portuguese;
+    const isFavorite = this.favorites.some(fav => fav.word === wordKey);
+    
+    if (isFavorite) {
+      favoriteBtn.innerHTML = '<i class="fas fa-star"></i>';
+      favoriteBtn.classList.add('active');
     } else {
-      // Loop back to first card
-      this.currentIndex = 0;
-      this.renderCard();
-    }
-  }
-  
-  prevCard() {
-    if (this.currentIndex > 0) {
-      this.currentIndex--;
-      this.renderCard();
-    } else {
-      // Loop to last card
-      this.currentIndex = this.cards.length - 1;
-      this.renderCard();
-    }
-  }
-  
-  playAudio(audioSrc) {
-    if (!audioSrc) {
-      alert('Audio will be available in a future update.');
-      return;
+      favoriteBtn.innerHTML = '<i class="far fa-star"></i>';
+      favoriteBtn.classList.remove('active');
     }
     
-    // Create audio element
-    const audio = new Audio(audioSrc);
-    
-    // Add error handler
-    audio.onerror = () => {
-      alert('Audio will be available in a future update.');
+    // Add click event
+    favoriteBtn.onclick = (e) => {
+      e.stopPropagation(); // Prevent card from flipping
+      this.toggleFavorite();
     };
-    
-    // Try to play
-    audio.play().catch(error => {
-      console.error('Error playing audio:', error);
-      alert('Audio will be available in a future update.');
-    });
   }
   
-  filterCards(query) {
-    if (!query) {
-      // Reset to original cards
-      this.cards = [...this.allCards];
-      this.currentIndex = 0;
-      this.renderCard();
-      return;
-    }
+  toggleFavorite() {
+    if (!this.currentWord) return;
     
-    query = query.toLowerCase();
+    const wordKey = this.currentWord.word || this.currentWord.portuguese;
+    const isFavorite = this.favorites.some(fav => fav.word === wordKey);
     
-    const filteredCards = this.allCards.filter(card => 
-      card.word.toLowerCase().includes(query) || 
-      card.translation.toLowerCase().includes(query) ||
-      (card.example && card.example.toLowerCase().includes(query))
-    );
-    
-    this.cards = filteredCards;
-    this.currentIndex = 0;
-    
-    if (this.cards.length > 0) {
-      this.renderCard();
-    } else {
-      // No results
-      this.flashcardElement.innerHTML = `
-        <div class="flashcard-inner">
-          <div class="flashcard-front">
-            <h3>No results found</h3>
-            <p>Try a different search term</p>
-          </div>
-        </div>
-      `;
-      
-      if (this.progressElement) {
-        this.progressElement.textContent = `0 / 0`;
-      }
-    }
-  }
-  
-  toggleFavorite(index) {
-    const card = this.cards[index];
-    const cardId = card.word;
-    const favoriteBtn = this.flashcardElement.querySelector('.favorite-btn i');
-    
-    if (this.favorites.includes(cardId)) {
+    if (isFavorite) {
       // Remove from favorites
-      this.favorites = this.favorites.filter(id => id !== cardId);
-      if (favoriteBtn) favoriteBtn.className = 'far fa-star';
+      this.favorites = this.favorites.filter(fav => fav.word !== wordKey);
     } else {
       // Add to favorites
-      this.favorites.push(cardId);
-      if (favoriteBtn) favoriteBtn.className = 'fas fa-star';
+      this.favorites.push({
+        word: wordKey,
+        translation: this.currentWord.translation,
+        category: this.currentCategory
+      });
     }
     
     // Save to localStorage
     localStorage.setItem('favorites', JSON.stringify(this.favorites));
     
-    // If showing favorites, refresh the list
-    if (this.showingFavorites) {
-      this.toggleFavorites();
-    }
-  }
-  
-  toggleFavorites() {
-    if (this.showingFavorites) {
-      // Switch back to all cards
-      this.cards = [...this.allCards];
-      this.currentIndex = 0;
-      this.renderCard();
-      
-      if (this.favoritesBtn) {
-        this.favoritesBtn.innerHTML = '<i class="far fa-star"></i> Favorites';
-      }
-      
-      this.showingFavorites = false;
-    } else {
-      // Show only favorites
-      const favoriteCards = this.allCards.filter(card => 
-        this.favorites.includes(card.word)
-      );
-      
-      if (favoriteCards.length > 0) {
-        this.cards = favoriteCards;
-        this.currentIndex = 0;
-        this.renderCard();
-      } else {
-        // No favorites
-        this.flashcardElement.innerHTML = `
-          <div class="flashcard-inner">
-            <div class="flashcard-front">
-              <h3>No favorites yet</h3>
-              <p>Click the star icon on cards to add them to favorites</p>
-            </div>
-          </div>
-        `;
-        
-        if (this.progressElement) {
-          this.progressElement.textContent = `0 / 0`;
-        }
-      }
-      
-      if (this.favoritesBtn) {
-        this.favoritesBtn.innerHTML = '<i class="fas fa-star"></i> Show All';
-      }
-      
-      this.showingFavorites = true;
+    // Update button
+    this.updateFavoriteButton();
+    
+    // If showing favorites and removing a favorite, reload cards
+    if (this.showingFavorites && isFavorite) {
+      this.loadFlashcards();
     }
   }
 }
