@@ -338,7 +338,41 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+  // Initialize mobile menu
+const mobileMenu = new MobileMenuHandler();
+
+// Add keyboard shortcuts for navigation
+document.addEventListener('keydown', (e) => {
+  // Global section navigation shortcuts (Alt + number)
+  if (e.altKey) {
+    if (e.key === '1') showSection('home');
+    if (e.key === '2') showSection('flashcards');
+    if (e.key === '3') showSection('pronunciation');
+    if (e.key === '4') showSection('quiz');
+    if (e.key === '5') showSection('a2test');
+    if (e.key === '6') showSection('progress');
+  }
+});
+
+// Add CSS for mobile menu toggle
+const mobileMenuStyle = document.createElement('style');
+mobileMenuStyle.textContent = `
+  .mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 24px;
+    cursor: pointer;
+  }
   
+  @media (max-width: 768px) {
+    .mobile-menu-toggle {
+      display: block;
+    }
+  }
+`;
+document.head.appendChild(mobileMenuStyle);
   // Initialize the app
   init();
 });
