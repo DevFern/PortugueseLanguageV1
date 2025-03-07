@@ -52,6 +52,28 @@ class QuizManager {
         });
       });
     }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (document.querySelector('#quiz.active')) {
+        // Number keys 1-4 for selecting options
+        if (e.key >= '1' && e.key <= '4') {
+          const optionIndex = parseInt(e.key) - 1;
+          const option = this.quizContainer.querySelector(`#option-${optionIndex}`);
+          if (option && !option.disabled) {
+            option.checked = true;
+          }
+        }
+        
+        // Enter to submit answer
+        if (e.key === 'Enter') {
+          const submitButton = this.quizContainer.querySelector('.submit-answer-btn');
+          if (submitButton) {
+            submitButton.click();
+          }
+        }
+      }
+    });
   }
   
   generateQuiz(type) {
@@ -331,7 +353,11 @@ class QuizManager {
           const answer = parseInt(selectedOption.value);
           this.checkAnswer(answer, question.correct);
         } else {
-          alert('Please select an answer');
+          // Visual feedback for no selection
+          this.quizContainer.querySelector('.options-container').classList.add('shake');
+          setTimeout(() => {
+            this.quizContainer.querySelector('.options-container').classList.remove('shake');
+          }, 500);
         }
       });
     }
@@ -350,6 +376,26 @@ class QuizManager {
           }
         }
       });
+    }
+    
+    // Track progress if progress tracker exists
+    if (window.progressTracker) {
+      switch(this.quizType) {
+        case 'vocabulary':
+          window.progressTracker.updateVocabularyFromQuiz({
+            percentage: (this.currentQuestionIndex / this.totalQuestions) * 100
+          });
+          break;
+        case 'grammar':
+          window.progressTracker.updateGrammarProgress(this.currentQuestionIndex, this.totalQuestions);
+          break;
+        case 'listening':
+          window.progressTracker.updateListeningProgress(this.currentQuestionIndex, this.totalQuestions);
+          break;
+        case 'citizenship':
+          window.progressTracker.updateCitizenshipProgress(this.currentQuestionIndex, this.totalQuestions);
+          break;
+      }
     }
   }
   
@@ -398,11 +444,6 @@ class QuizManager {
         this.currentQuestionIndex++;
         this.renderQuestion();
       };
-    }
-    
-    // Track progress if progress tracker exists
-    if (window.progressTracker) {
-      window.progressTracker.updateGrammarProgress(this.currentQuestionIndex + 1, this.totalQuestions);
     }
   }
   
