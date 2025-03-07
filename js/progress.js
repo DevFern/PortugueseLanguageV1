@@ -4,6 +4,7 @@ class ProgressTracker {
             vocabulary: 0,
             grammar: 0,
             listening: 0,
+            citizenship: 0,
             quizzes: [],
             lastActivity: null,
             totalLessonsCompleted: 0,
@@ -26,11 +27,29 @@ class ProgressTracker {
             const progress = await this.authManager.getProgress();
             if (progress) {
                 this.progress = progress;
+                // Ensure citizenship property exists
+                if (typeof this.progress.citizenship === 'undefined') {
+                    this.progress.citizenship = 0;
+                }
                 this.isInitialized = true;
             } else {
                 // Initialize with default values if no progress exists
                 this.progress.lastLogin = new Date().toISOString();
                 this.saveProgress();
+            }
+        } else {
+            // Try to load from localStorage
+            const savedProgress = localStorage.getItem('progress');
+            if (savedProgress) {
+                try {
+                    this.progress = JSON.parse(savedProgress);
+                    // Ensure citizenship property exists
+                    if (typeof this.progress.citizenship === 'undefined') {
+                        this.progress.citizenship = 0;
+                    }
+                } catch (e) {
+                    console.error('Error parsing saved progress:', e);
+                }
             }
         }
     }
@@ -40,6 +59,7 @@ class ProgressTracker {
         const vocabProgress = document.getElementById('vocab-progress');
         const grammarProgress = document.getElementById('grammar-progress');
         const listeningProgress = document.getElementById('listening-progress');
+        const citizenshipProgress = document.getElementById('citizenship-progress');
         
         if (vocabProgress) {
             vocabProgress.style.width = `${this.progress.vocabulary}%`;
@@ -56,6 +76,11 @@ class ProgressTracker {
             listeningProgress.setAttribute('aria-valuenow', this.progress.listening);
         }
         
+        if (citizenshipProgress) {
+            citizenshipProgress.style.width = `${this.progress.citizenship || 0}%`;
+            citizenshipProgress.setAttribute('aria-valuenow', this.progress.citizenship || 0);
+        }
+        
         // Update streak display if it exists
         const streakElement = document.getElementById('streak-count');
         if (streakElement) {
@@ -66,6 +91,13 @@ class ProgressTracker {
         const lessonsElement = document.getElementById('lessons-completed');
         if (lessonsElement) {
             lessonsElement.textContent = this.progress.totalLessonsCompleted;
+        }
+        
+        // Update overall progress if element exists
+        const overallElement = document.getElementById('overall-progress');
+        if (overallElement) {
+            const overall = this.getOverallProgress();
+            overallElement.textContent = `${overall}%`;
         }
         
         // Update recent activity
@@ -211,6 +243,22 @@ class ProgressTracker {
         }
     }
     
+    updateCitizenshipProgress(completed, total) {
+        // Calculate citizenship progress
+        const newProgress = Math.min(Math.round((completed / total) * 100), 100);
+        
+        if (!this.progress.citizenship || newProgress > this.progress.citizenship) {
+            this.progress.citizenship = newProgress;
+            this.progress.lastActivity = {
+                type: 'citizenship',
+                date: new Date().toISOString()
+            };
+            this.progress.totalLessonsCompleted += 1;
+            this.saveProgress();
+            this.updateProgressUI();
+        }
+    }
+    
     saveQuizResult(quizResult) {
         // Add quiz result to history
         if (!this.progress.quizzes) {
@@ -234,6 +282,9 @@ class ProgressTracker {
                 break;
             case 'listening':
                 this.updateListeningFromQuiz(quizResult);
+                break;
+            case 'citizenship':
+                this.updateCitizenshipFromQuiz(quizResult);
                 break;
         }
         
@@ -287,6 +338,18 @@ class ProgressTracker {
         }
     }
     
+    updateCitizenshipFromQuiz(quizResult) {
+        // Update citizenship progress based on quiz performance
+        const potentialProgress = Math.min(
+            (this.progress.citizenship || 0) + Math.round((quizResult.percentage / 100) * 10),
+            100
+        );
+        
+        if (!this.progress.citizenship || potentialProgress > this.progress.citizenship) {
+            this.progress.citizenship = potentialProgress;
+        }
+    }
+    
     async saveProgress() {
         if (this.authManager && this.authManager.getCurrentUser()) {
             await this.authManager.saveProgress(this.progress);
@@ -299,9 +362,10 @@ class ProgressTracker {
     getOverallProgress() {
         // Calculate overall progress as average of all categories
         const categories = [
-            this.progress.vocabulary,
-            this.progress.grammar,
-            this.progress.listening
+            this.progress.vocabulary || 0,
+            this.progress.grammar || 0,
+            this.progress.listening || 0,
+            this.progress.citizenship || 0
         ];
         
         const sum = categories.reduce((total, current) => total + current, 0);
@@ -330,6 +394,7 @@ class ProgressTracker {
             vocabulary: 0,
             grammar: 0,
             listening: 0,
+            citizenship: 0,
             quizzes: [],
             lastActivity: null,
             totalLessonsCompleted: 0,
