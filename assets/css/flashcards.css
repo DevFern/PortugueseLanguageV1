@@ -151,3 +151,92 @@
   background-color: var(--primary-color);
   color: white;
 }
+/* Add these styles to the end of your flashcards.css file */
+
+/* Flashcard animations */
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.flashcard.flipped .flashcard-inner {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+}
+
+/* Favorite button */
+.favorite-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #f1c40f;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.favorite-btn:hover {
+  transform: scale(1.2);
+}
+
+/* Audio button */
+.play-audio-btn {
+  margin-top: 15px;
+  padding: 8px 15px;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.play-audio-btn:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Example text */
+.example {
+  font-style: italic;
+  margin-top: 15px;
+  color: var(--text-secondary);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .flashcard {
+    width: 90%;
+    height: 300px;
+  }
+  
+  .flashcard-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .flashcard-controls button {
+    margin: 5px;
+  }
+}
