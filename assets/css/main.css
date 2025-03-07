@@ -1289,3 +1289,119 @@ img {
 .shake {
   animation: shake 0.5s;
 }
+/* Streak Calendar Styles */
+.streak-calendar {
+  margin-top: 20px;
+}
+
+.streak-info {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+}
+
+.current-streak, .longest-streak {
+  text-align: center;
+}
+
+.streak-number {
+  display: block;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--accent-color);
+}
+
+.streak-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.calendar-day-label {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--text-secondary);
+  padding: 5px;
+}
+
+.calendar-day {
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  cursor: default;
+}
+
+.calendar-day.empty {
+  background: none;
+}
+
+.calendar-day.active-day {
+  background-color: rgba(76, 175, 80, 0.2);
+  border: 1px solid #4CAF50;
+}
+
+.calendar-day.today {
+  border: 2px solid var(--accent-color);
+  font-weight: bold;
+}
+
+/* Quiz History Table Styles */
+.quiz-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.quiz-history-table th, 
+.quiz-history-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.quiz-history-table th {
+  font-weight: bold;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .streak-info {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .calendar-grid {
+    gap: 2px;
+  }
+  
+  .calendar-day {
+    height: 30px;
+    font-size: 0.8rem;
+  }
+  
+  .quiz-history-table {
+    font-size: 0.9rem;
+  }
+  
+  .quiz-history-table th, 
+  .quiz-history-table td {
+    padding: 8px 5px;
+  }
+}
