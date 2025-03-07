@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="assets/css/quiz.css">
+    <link rel="stylesheet" href="assets/css/flashcards.css">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -28,6 +29,7 @@
                 <a href="#pronunciation" class="nav-link" data-section="pronunciation">Pronunciation</a>
                 <a href="#quiz" class="nav-link" data-section="quiz">Quiz</a>
                 <a href="#a2test" class="nav-link" data-section="a2test">A2 Test</a>
+                <a href="#progress" class="nav-link" data-section="progress">Progress</a>
                 <a href="#about" class="nav-link" data-section="about">About</a>
             </div>
             <div class="user-section">
@@ -146,6 +148,12 @@
 
         <section id="flashcards" class="section">
             <h2>Vocabulary Flashcards</h2>
+            <div class="search-container">
+                <input type="text" id="flashcard-search" placeholder="Search for words...">
+                <button class="toggle-btn" id="favorites-toggle">
+                    <i class="far fa-star"></i> Favorites
+                </button>
+            </div>
             <div class="level-selector">
                 <button class="level-btn active" data-level="beginner">Beginner</button>
                 <button class="level-btn" data-level="intermediate">Intermediate</button>
@@ -160,6 +168,9 @@
             </div>
             <div class="flashcard-container">
                 <div class="flashcard">
+                    <button class="favorite-btn">
+                        <i class="far fa-star"></i>
+                    </button>
                     <div class="flashcard-inner">
                         <div class="flashcard-front">
                             <h3 class="word">cidadania</h3>
@@ -169,7 +180,7 @@
                             <h3 class="translation">citizenship</h3>
                             <p class="usage">Preciso de obter a cidadania portuguesa.</p>
                             <p class="english-usage">I need to obtain Portuguese citizenship.</p>
-                            <button class="audio-btn"><i class="fas fa-volume-up"></i> Listen</button>
+                            <button class="play-audio-btn"><i class="fas fa-volume-up"></i> Listen</button>
                         </div>
                     </div>
                 </div>
@@ -223,6 +234,7 @@
             </div>
             <div class="level-selector">
                 <button class="level-btn active" data-level="beginner">Beginner</button>
+                <button class="level-btn" data-level="intermediate">Intermediate</button>
                 <button class="level-btn" data-level="advanced">Advanced</button>
             </div>
             <div class="quiz-container">
@@ -241,6 +253,73 @@
             </div>
             <div class="test-container">
                 <!-- Test content will be dynamically generated -->
+            </div>
+        </section>
+
+        <section id="progress" class="section">
+            <h2>Your Progress</h2>
+            <div class="progress-overview">
+                <div class="progress-item">
+                    <div class="progress-label">Vocabulary</div>
+                    <div class="progress">
+                        <div id="vocabulary-progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">Grammar</div>
+                    <div class="progress">
+                        <div id="grammar-progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">Listening</div>
+                    <div class="progress">
+                        <div id="listening-progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">Citizenship</div>
+                    <div class="progress">
+                        <div id="citizenship-progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>Quiz History</h3>
+            <div class="quiz-history">
+                <table class="quiz-history-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Quiz Type</th>
+                            <th>Level</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quiz-history-body">
+                        <!-- Quiz history will be populated dynamically -->
+                    </tbody>
+                </table>
+                <div id="empty-quiz-history" class="empty-state">
+                    <p>No quiz history yet. Complete quizzes to track your progress!</p>
+                </div>
+            </div>
+            
+            <h3>Learning Streak</h3>
+            <div class="streak-calendar">
+                <div class="streak-info">
+                    <div class="current-streak">
+                        <span class="streak-number" id="current-streak">0</span>
+                        <span class="streak-label">Current Streak</span>
+                    </div>
+                    <div class="longest-streak">
+                        <span class="streak-number" id="longest-streak">0</span>
+                        <span class="streak-label">Longest Streak</span>
+                    </div>
+                </div>
+                <div class="calendar-grid" id="streak-calendar">
+                    <!-- Calendar will be populated dynamically -->
+                </div>
             </div>
         </section>
 
@@ -356,6 +435,9 @@
     <script src="js/quiz.js"></script>
     <script src="js/a2test.js"></script>
     <script src="js/progress.js"></script>
+    <script src="js/progress-tracker.js"></script>
+    <script src="js/onboarding.js"></script>
+    <script src="js/mobile-menu.js"></script>
     
     <!-- Main script last -->
     <script src="js/script.js"></script>
