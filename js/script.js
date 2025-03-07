@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const userName = document.getElementById('user-name');
   const logoutBtn = document.getElementById('logout-btn');
   const dashboard = document.getElementById('dashboard');
+  const mobileMenuToggle = document.createElement('button');
   
   // Initialize modules
   const authManager = new AuthManager();
@@ -38,6 +39,8 @@ document.addEventListener('DOMContentLoaded', function() {
   let quizManager = null;
   let a2TestModule = null;
   let progressTracker = null;
+  let mobileMenu = null;
+  let onboardingManager = null;
   
   function init() {
     console.log('Initializing app...');
@@ -59,6 +62,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up auth state listener
     authManager.onAuthStateChanged(handleAuthStateChanged);
+    
+    // Initialize mobile menu
+    initializeMobileMenu();
     
     console.log('App initialized');
   }
@@ -125,6 +131,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update app state
     appState.currentSection = sectionId;
     window.location.hash = sectionId;
+    
+    // Close mobile menu if open
+    if (mobileMenu && window.innerWidth <= 768) {
+      mobileMenu.closeMenu();
+    }
+    
+    // Show onboarding tips for new users
+    if (onboardingManager) {
+      onboardingManager.showTipsForSection(sectionId);
+    }
   }
   
   function initializeComponents() {
@@ -162,6 +178,67 @@ document.addEventListener('DOMContentLoaded', function() {
       progressTracker.init(authManager);
       window.progressTracker = progressTracker;
     }
+    
+    // Initialize onboarding manager
+    if (typeof OnboardingManager !== 'undefined') {
+      onboardingManager = new OnboardingManager();
+      onboardingManager.init();
+      window.onboardingManager = onboardingManager;
+    }
+  }
+  
+  function initializeMobileMenu() {
+    if (typeof MobileMenuHandler !== 'undefined') {
+      mobileMenu = new MobileMenuHandler();
+      mobileMenu.init();
+      window.mobileMenu = mobileMenu;
+    } else {
+      console.warn('MobileMenuHandler not found');
+    }
+    
+    // Add CSS for mobile menu toggle
+    const mobileMenuStyle = document.createElement('style');
+    mobileMenuStyle.textContent = `
+      .mobile-menu-toggle {
+        display: none;
+        background: none;
+        border: none;
+        color: var(--text-color);
+        font-size: 24px;
+        cursor: pointer;
+        padding: 5px;
+      }
+      
+      @media (max-width: 768px) {
+        .mobile-menu-toggle {
+          display: block;
+        }
+        
+        .nav-links {
+          display: none;
+          flex-direction: column;
+          position: absolute;
+          top: 60px;
+          left: 0;
+          right: 0;
+          background-color: var(--background-color);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          z-index: 100;
+          padding: 10px 0;
+        }
+        
+        .nav-links.open {
+          display: flex;
+        }
+        
+        .nav-link {
+          padding: 12px 20px;
+          width: 100%;
+          text-align: left;
+        }
+      }
+    `;
+    document.head.appendChild(mobileMenuStyle);
   }
   
   function attachEventListeners() {
@@ -337,42 +414,22 @@ document.addEventListener('DOMContentLoaded', function() {
         e.target.style.display = 'none';
       }
     });
-  }
-  // Initialize mobile menu
-const mobileMenu = new MobileMenuHandler();
-
-// Add keyboard shortcuts for navigation
-document.addEventListener('keydown', (e) => {
-  // Global section navigation shortcuts (Alt + number)
-  if (e.altKey) {
-    if (e.key === '1') showSection('home');
-    if (e.key === '2') showSection('flashcards');
-    if (e.key === '3') showSection('pronunciation');
-    if (e.key === '4') showSection('quiz');
-    if (e.key === '5') showSection('a2test');
-    if (e.key === '6') showSection('progress');
-  }
-});
-
-// Add CSS for mobile menu toggle
-const mobileMenuStyle = document.createElement('style');
-mobileMenuStyle.textContent = `
-  .mobile-menu-toggle {
-    display: none;
-    background: none;
-    border: none;
-    color: var(--text-color);
-    font-size: 24px;
-    cursor: pointer;
+    
+    // Add keyboard shortcuts for navigation
+    document.addEventListener('keydown', (e) => {
+      // Global section navigation shortcuts (Alt + number)
+      if (e.altKey) {
+        if (e.key === '1') showSection('home');
+        if (e.key === '2') showSection('flashcards');
+        if (e.key === '3') showSection('pronunciation');
+        if (e.key === '4') showSection('quiz');
+        if (e.key === '5') showSection('a2test');
+        if (e.key === '6') showSection('progress');
+        if (e.key === '7') showSection('about');
+      }
+    });
   }
   
-  @media (max-width: 768px) {
-    .mobile-menu-toggle {
-      display: block;
-    }
-  }
-`;
-document.head.appendChild(mobileMenuStyle);
   // Initialize the app
   init();
 });
