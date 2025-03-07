@@ -6,6 +6,7 @@ class QuizManager {
     this.totalQuestions = 0;
     this.level = localStorage.getItem('userLevel') || 'beginner';
     this.quizType = 'vocabulary';
+    this.answeredQuestions = [];
     
     // DOM elements
     this.quizContainer = document.querySelector('.quiz-container');
@@ -72,6 +73,15 @@ class QuizManager {
             submitButton.click();
           }
         }
+        
+        // Space to play audio in listening questions
+        if (e.key === ' ' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
+          const audioButton = this.quizContainer.querySelector('.play-audio-btn');
+          if (audioButton) {
+            audioButton.click();
+            e.preventDefault(); // Prevent page scrolling
+          }
+        }
       }
     });
   }
@@ -79,6 +89,7 @@ class QuizManager {
   generateQuiz(type) {
     this.currentQuestionIndex = 0;
     this.score = 0;
+    this.answeredQuestions = [];
     this.quizType = type;
     
     switch(type) {
@@ -402,6 +413,14 @@ class QuizManager {
   checkAnswer(userAnswer, correctAnswer) {
     const explanation = this.quizContainer.querySelector('#explanation');
     
+    // Record this question as answered
+    this.answeredQuestions.push({
+      questionIndex: this.currentQuestionIndex,
+      userAnswer: userAnswer,
+      correctAnswer: correctAnswer,
+      isCorrect: userAnswer === correctAnswer
+    });
+    
     if (userAnswer === correctAnswer) {
       this.score++;
       
@@ -467,6 +486,28 @@ class QuizManager {
       message = 'Keep studying! You\'ll get better with practice.';
     }
     
+    // Create results summary
+    let questionSummary = '';
+    if (this.answeredQuestions.length > 0) {
+      questionSummary = `
+        <div class="question-summary">
+          <h4>Question Summary</h4>
+          <div class="summary-list">
+            ${this.answeredQuestions.map((answer, index) => {
+              const question = this.currentQuiz.questions[answer.questionIndex];
+              return `
+                <div class="summary-item ${answer.isCorrect ? 'correct' : 'incorrect'}">
+                  <span class="question-number">Q${index + 1}:</span>
+                  <span class="question-result">${answer.isCorrect ? 'Correct' : 'Incorrect'}</span>
+                  <span class="question-text">${question.question}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+    
     const html = `
       <div class="quiz-results">
         <h3>Quiz Results</h3>
@@ -477,6 +518,7 @@ class QuizManager {
           <p class="score-message">${message}</p>
         </div>
         <p>You scored ${this.score} out of ${this.totalQuestions} questions correctly.</p>
+        ${questionSummary}
         <div class="result-actions">
           <button class="retry-btn">Try Again</button>
           <button class="new-quiz-btn">New Quiz</button>
@@ -492,6 +534,7 @@ class QuizManager {
       retryButton.addEventListener('click', () => {
         this.currentQuestionIndex = 0;
         this.score = 0;
+        this.answeredQuestions = [];
         this.renderQuestion();
       });
     }
