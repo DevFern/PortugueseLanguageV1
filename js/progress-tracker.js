@@ -4,10 +4,12 @@ class ProgressTracker {
       vocabulary: 0,
       grammar: 0,
       listening: 0,
+      citizenship: 0, // Added citizenship progress
       quizzes: [],
       lastActivity: null,
       totalLessonsCompleted: 0,
       streak: 1,
+      longestStreak: 1, // Added longest streak tracking
       lastLogin: new Date().toISOString()
     };
     this.authManager = null;
@@ -28,6 +30,16 @@ class ProgressTracker {
     if (savedProgress) {
       try {
         this.progress = JSON.parse(savedProgress);
+        
+        // Ensure citizenship property exists (for backward compatibility)
+        if (typeof this.progress.citizenship === 'undefined') {
+          this.progress.citizenship = 0;
+        }
+        
+        // Ensure longestStreak property exists
+        if (typeof this.progress.longestStreak === 'undefined') {
+          this.progress.longestStreak = this.progress.streak || 1;
+        }
       } catch (e) {
         console.error('Error parsing progress data:', e);
         // Initialize with default values
@@ -44,10 +56,12 @@ class ProgressTracker {
       vocabulary: 0,
       grammar: 0,
       listening: 0,
+      citizenship: 0,
       quizzes: [],
       lastActivity: null,
       totalLessonsCompleted: 0,
       streak: 1,
+      longestStreak: 1,
       lastLogin: new Date().toISOString()
     };
     this.saveProgress();
@@ -68,7 +82,7 @@ class ProgressTracker {
   }
   
   updateProgressUI() {
-    // Update progress bars
+    // Update progress bars in dashboard
     const vocabProgress = document.getElementById('vocab-progress');
     const grammarProgress = document.getElementById('grammar-progress');
     const listeningProgress = document.getElementById('listening-progress');
@@ -88,6 +102,32 @@ class ProgressTracker {
       listeningProgress.setAttribute('aria-valuenow', this.progress.listening);
     }
     
+    // Update progress bars in progress section
+    const vocabularyProgressBar = document.getElementById('vocabulary-progress');
+    const grammarProgressBar = document.getElementById('grammar-progress');
+    const listeningProgressBar = document.getElementById('listening-progress');
+    const citizenshipProgressBar = document.getElementById('citizenship-progress');
+    
+    if (vocabularyProgressBar) {
+      vocabularyProgressBar.style.width = `${this.progress.vocabulary}%`;
+      vocabularyProgressBar.setAttribute('aria-valuenow', this.progress.vocabulary);
+    }
+    
+    if (grammarProgressBar) {
+      grammarProgressBar.style.width = `${this.progress.grammar}%`;
+      grammarProgressBar.setAttribute('aria-valuenow', this.progress.grammar);
+    }
+    
+    if (listeningProgressBar) {
+      listeningProgressBar.style.width = `${this.progress.listening}%`;
+      listeningProgressBar.setAttribute('aria-valuenow', this.progress.listening);
+    }
+    
+    if (citizenshipProgressBar) {
+      citizenshipProgressBar.style.width = `${this.progress.citizenship}%`;
+      citizenshipProgressBar.setAttribute('aria-valuenow', this.progress.citizenship);
+    }
+    
     // Update percentage displays
     const vocabPercentage = document.getElementById('vocab-percentage');
     const grammarPercentage = document.getElementById('grammar-percentage');
@@ -101,6 +141,18 @@ class ProgressTracker {
     const streakElement = document.getElementById('streak-count');
     if (streakElement) {
       streakElement.textContent = this.progress.streak;
+    }
+    
+    // Update streak in progress section
+    const currentStreakElement = document.getElementById('current-streak');
+    const longestStreakElement = document.getElementById('longest-streak');
+    
+    if (currentStreakElement) {
+      currentStreakElement.textContent = this.progress.streak;
+    }
+    
+    if (longestStreakElement) {
+      longestStreakElement.textContent = this.progress.longestStreak;
     }
     
     // Update total lessons completed
@@ -118,6 +170,12 @@ class ProgressTracker {
     
     // Update recent activity
     this.updateRecentActivity();
+    
+    // Update quiz history table
+    this.updateQuizHistory();
+    
+    // Update streak calendar
+    this.updateStreakCalendar();
   }
   
   updateRecentActivity() {
@@ -180,6 +238,113 @@ class ProgressTracker {
     });
   }
   
+  updateQuizHistory() {
+    const quizHistoryBody = document.getElementById('quiz-history-body');
+    const emptyQuizHistory = document.getElementById('empty-quiz-history');
+    
+    if (!quizHistoryBody) return;
+    
+    // Clear existing rows
+    quizHistoryBody.innerHTML = '';
+    
+    if (!this.progress.quizzes || this.progress.quizzes.length === 0) {
+      if (emptyQuizHistory) {
+        emptyQuizHistory.style.display = 'block';
+      }
+      return;
+    }
+    
+    if (emptyQuizHistory) {
+      emptyQuizHistory.style.display = 'none';
+    }
+    
+    // Sort quizzes by date (most recent first)
+    const sortedQuizzes = [...this.progress.quizzes]
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Add rows to table
+    sortedQuizzes.forEach(quiz => {
+      const date = new Date(quiz.date);
+      const formattedDate = date.toLocaleDateString();
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${formattedDate}</td>
+        <td>${this.capitalizeFirstLetter(quiz.type)}</td>
+        <td>${this.capitalizeFirstLetter(quiz.level)}</td>
+        <td>${quiz.percentage}%</td>
+      `;
+      
+      quizHistoryBody.appendChild(row);
+    });
+  }
+  
+  updateStreakCalendar() {
+    const calendarGrid = document.getElementById('streak-calendar');
+    if (!calendarGrid) return;
+    
+    // Clear existing calendar
+    calendarGrid.innerHTML = '';
+    
+    // Create calendar for current month
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    
+    // Get first day of month and total days
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    
+    // Create day labels
+    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    dayLabels.forEach(day => {
+      const dayLabel = document.createElement('div');
+      dayLabel.className = 'calendar-day-label';
+      dayLabel.textContent = day;
+      calendarGrid.appendChild(dayLabel);
+    });
+    
+    // Add empty cells for days before first day of month
+    for (let i = 0; i < firstDay; i++) {
+      const emptyDay = document.createElement('div');
+      emptyDay.className = 'calendar-day empty';
+      calendarGrid.appendChild(emptyDay);
+    }
+    
+    // Add days of month
+    for (let i = 1; i <= daysInMonth; i++) {
+      const day = document.createElement('div');
+      day.className = 'calendar-day';
+      
+      // Check if this day has activity
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+      const hasActivity = this.checkDateHasActivity(dateStr);
+      
+      if (hasActivity) {
+        day.classList.add('active-day');
+      }
+      
+      // Mark today
+      if (i === today.getDate()) {
+        day.classList.add('today');
+      }
+      
+      day.textContent = i;
+      calendarGrid.appendChild(day);
+    }
+  }
+  
+  checkDateHasActivity(dateStr) {
+    if (!this.progress.quizzes || this.progress.quizzes.length === 0) {
+      return false;
+    }
+    
+    return this.progress.quizzes.some(quiz => {
+      const quizDate = new Date(quiz.date);
+      return quizDate.toISOString().substring(0, 10) === dateStr;
+    });
+  }
+  
   getQuizAverage() {
     if (!this.progress.quizzes || this.progress.quizzes.length === 0) {
       return 0;
@@ -192,6 +357,7 @@ class ProgressTracker {
   updateStreak() {
     if (!this.progress.lastLogin) {
       this.progress.streak = 1;
+      this.progress.longestStreak = 1;
       this.progress.lastLogin = new Date().toISOString();
       this.saveProgress();
       return;
@@ -211,6 +377,11 @@ class ProgressTracker {
     if (diffDays === 1) {
       // Consecutive day, increase streak
       this.progress.streak += 1;
+      
+      // Update longest streak if current streak is longer
+      if (this.progress.streak > this.progress.longestStreak) {
+        this.progress.longestStreak = this.progress.streak;
+      }
     } else if (diffDays > 1) {
       // Streak broken, reset to 1
       this.progress.streak = 1;
@@ -267,6 +438,21 @@ class ProgressTracker {
     }
   }
   
+  updateCitizenshipProgress(completed, total) {
+    const newProgress = Math.min(Math.round((completed / total) * 100), 100);
+    
+    if (newProgress > this.progress.citizenship) {
+      this.progress.citizenship = newProgress;
+      this.progress.lastActivity = {
+        type: 'citizenship',
+        date: new Date().toISOString()
+      };
+      this.progress.totalLessonsCompleted += 1;
+      this.saveProgress();
+      this.updateProgressUI();
+    }
+  }
+  
   saveQuizResult(quizResult) {
     if (!this.progress.quizzes) {
       this.progress.quizzes = [];
@@ -289,6 +475,9 @@ class ProgressTracker {
         break;
       case 'listening':
         this.updateListeningFromQuiz(quizResult);
+        break;
+      case 'citizenship':
+        this.updateCitizenshipFromQuiz(quizResult);
         break;
     }
     
@@ -334,6 +523,17 @@ class ProgressTracker {
     
     if (potentialProgress > this.progress.listening) {
       this.progress.listening = potentialProgress;
+    }
+  }
+  
+  updateCitizenshipFromQuiz(quizResult) {
+    const potentialProgress = Math.min(
+      this.progress.citizenship + Math.round((quizResult.percentage / 100) * 10),
+      100
+    );
+    
+    if (potentialProgress > this.progress.citizenship) {
+      this.progress.citizenship = potentialProgress;
     }
   }
   
