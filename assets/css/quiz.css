@@ -462,3 +462,126 @@
         display: none;
     }
 }
+/* Add these styles to the end of your quiz.css file */
+
+/* Option styling */
+.option {
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.option:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.option.correct {
+  background-color: rgba(76, 175, 80, 0.2);
+  border: 1px solid #4CAF50;
+  animation: pulse-success 1s;
+}
+
+.option.incorrect {
+  background-color: rgba(244, 67, 54, 0.2);
+  border: 1px solid #F44336;
+  animation: shake 0.5s;
+}
+
+@keyframes pulse-success {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Explanation styling */
+.explanation {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: rgba(33, 150, 243, 0.1);
+  border-left: 4px solid #2196F3;
+  border-radius: 4px;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Quiz results styling */
+.quiz-results {
+  text-align: center;
+  padding: 20px;
+}
+
+.result-score {
+  margin: 20px 0;
+}
+
+.score-circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  font-size: 36px;
+  font-weight: bold;
+}
+
+.excellent .score-circle {
+  background-color: rgba(76, 175, 80, 0.2);
+  border: 5px solid #4CAF50;
+  color: #4CAF50;
+}
+
+.good .score-circle {
+  background-color: rgba(33, 150, 243, 0.2);
+  border: 5px solid #2196F3;
+  color: #2196F3;
+}
+
+.average .score-circle {
+  background-color: rgba(255, 152, 0, 0.2);
+  border: 5px solid #FF9800;
+  color: #FF9800;
+}
+
+.poor .score-circle {
+  background-color: rgba(244, 67, 54, 0.2);
+  border: 5px solid #F44336;
+  color: #F44336;
+}
+
+.score-message {
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+.result-actions {
+  margin-top: 20px;
+}
+
+.result-actions button {
+  margin: 0 10px;
+  padding: 10px 20px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .options-container {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .option {
+    margin-bottom: 10px;
+  }
+  
+  .score-circle {
+    width: 120px;
+    height: 120px;
+    font-size: 30px;
+  }
+}
