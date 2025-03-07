@@ -1,106 +1,123 @@
-/**
- * Mobile Menu Handler
- * Adds mobile menu toggle functionality
- */
-class MobileMenuHandler {
+class MobileMenu {
   constructor() {
-    this.navLinks = document.querySelector('.nav-links');
-    this.mobileMenuToggle = null;
+    this.menuButton = document.getElementById('mobile-menu-btn');
+    this.mobileNav = document.querySelector('.nav-links');
+    this.navLinks = document.querySelectorAll('.nav-link');
+    this.overlay = document.createElement('div');
+    this.overlay.className = 'mobile-menu-overlay';
+    this.isOpen = false;
     
-    this.init();
-  }
-  
-  init() {
-    // Create mobile menu toggle button
-    this.createMobileMenuToggle();
-    
-    // Add event listener to toggle button
-    this.addToggleEventListener();
-    
-    // Close menu when clicking outside
-    this.addOutsideClickListener();
-    
-    // Close menu when window is resized to desktop size
-    this.addResizeListener();
-  }
-  
-  createMobileMenuToggle() {
-    // Create toggle button if it doesn't exist
-    if (!document.querySelector('.mobile-menu-toggle')) {
-      const toggle = document.createElement('button');
-      toggle.className = 'mobile-menu-toggle';
-      toggle.innerHTML = '<i class="fas fa-bars"></i>';
-      
-      const nav = document.querySelector('nav');
-      if (nav) {
-        nav.insertBefore(toggle, this.navLinks);
-        this.mobileMenuToggle = toggle;
-      }
-    } else {
-      this.mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+    // Create mobile menu button if it doesn't exist
+    if (!this.menuButton) {
+      this.createMenuButton();
     }
   }
   
-  addToggleEventListener() {
-    if (this.mobileMenuToggle) {
-      this.mobileMenuToggle.addEventListener('click', () => {
+  init() {
+    this.attachEventListeners();
+    this.setupResponsiveLayout();
+    
+    // Add overlay to body
+    document.body.appendChild(this.overlay);
+    
+    // Listen for window resize
+    window.addEventListener('resize', () => {
+      this.setupResponsiveLayout();
+    });
+  }
+  
+  createMenuButton() {
+    const navContainer = document.querySelector('.nav-container');
+    if (!navContainer) return;
+    
+    this.menuButton = document.createElement('button');
+    this.menuButton.id = 'mobile-menu-btn';
+    this.menuButton.className = 'mobile-menu-btn';
+    this.menuButton.setAttribute('aria-label', 'Toggle navigation menu');
+    this.menuButton.innerHTML = '<i class="fas fa-bars"></i>';
+    
+    // Insert before the first child of nav-container
+    navContainer.insertBefore(this.menuButton, navContainer.firstChild);
+  }
+  
+  attachEventListeners() {
+    if (this.menuButton) {
+      this.menuButton.addEventListener('click', () => {
         this.toggleMenu();
       });
+    }
+    
+    // Close menu when clicking on a link
+    this.navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          this.closeMenu();
+        }
+      });
+    });
+    
+    // Close menu when clicking on overlay
+    this.overlay.addEventListener('click', () => {
+      this.closeMenu();
+    });
+    
+    // Close menu with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.isOpen) {
+        this.closeMenu();
+      }
+    });
+  }
+  
+  setupResponsiveLayout() {
+    const isMobile = window.innerWidth <= 768;
+    
+    // Show/hide menu button based on screen size
+    if (this.menuButton) {
+      this.menuButton.style.display = isMobile ? 'block' : 'none';
+    }
+    
+    // Reset menu state on desktop
+    if (!isMobile && this.isOpen) {
+      this.mobileNav.classList.remove('open');
+      this.menuButton.classList.remove('open');
+      this.overlay.classList.remove('active');
+      document.body.classList.remove('menu-open');
+      this.isOpen = false;
     }
   }
   
   toggleMenu() {
-    if (this.navLinks) {
-      this.navLinks.classList.toggle('active');
-      
-      // Change icon based on menu state
-      if (this.mobileMenuToggle) {
-        const icon = this.mobileMenuToggle.querySelector('i');
-        if (icon) {
-          if (this.navLinks.classList.contains('active')) {
-            icon.className = 'fas fa-times';
-          } else {
-            icon.className = 'fas fa-bars';
-          }
-        }
-      }
+    if (this.isOpen) {
+      this.closeMenu();
+    } else {
+      this.openMenu();
     }
   }
   
-  addOutsideClickListener() {
-    document.addEventListener('click', (e) => {
-      // Check if menu is active and click is outside nav
-      if (
-        this.navLinks && 
-        this.navLinks.classList.contains('active') && 
-        !e.target.closest('nav')
-      ) {
-        this.navLinks.classList.remove('active');
-        
-        // Reset icon
-        if (this.mobileMenuToggle) {
-          const icon = this.mobileMenuToggle.querySelector('i');
-          if (icon) {
-            icon.className = 'fas fa-bars';
-          }
-        }
-      }
-    });
+  openMenu() {
+    this.mobileNav.classList.add('open');
+    this.menuButton.classList.add('open');
+    this.menuButton.innerHTML = '<i class="fas fa-times"></i>';
+    this.overlay.classList.add('active');
+    document.body.classList.add('menu-open');
+    this.isOpen = true;
+    
+    // Set focus to the first nav link for accessibility
+    setTimeout(() => {
+      this.navLinks[0].focus();
+    }, 100);
   }
   
-  addResizeListener() {
-    window.addEventListener('resize', () => {
-      if (window.innerWidth > 768 && this.navLinks && this.navLinks.classList.contains('active')) {
-        this.navLinks.classList.remove('active');
-        
-        // Reset icon
-        if (this.mobileMenuToggle) {
-          const icon = this.mobileMenuToggle.querySelector('i');
-          if (icon) {
-            icon.className = 'fas fa-bars';
-          }
-        }
-      }
-    });
+  closeMenu() {
+    this.mobileNav.classList.remove('open');
+    this.menuButton.classList.remove('open');
+    this.menuButton.innerHTML = '<i class="fas fa-bars"></i>';
+    this.overlay.classList.remove('active');
+    document.body.classList.remove('menu-open');
+    this.isOpen = false;
+    
+    // Return focus to menu button
+    this.menuButton.focus();
   }
 }
